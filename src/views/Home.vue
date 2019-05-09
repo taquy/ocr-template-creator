@@ -13,7 +13,7 @@
     export default {
         name: 'home',
         mounted() {
-            require('../assets/js/script')
+            require('../assets/js/script');
             console.log($('[resizable]'))
 
         }
