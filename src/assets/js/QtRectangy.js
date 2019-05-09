@@ -6,10 +6,12 @@ export class QtRectangy {
         this.omc = new ObjectModelContainer();
         this.omc.container = container;
 
+        // actual raw data
+        this.cubes = [];
     }
 
     load() {
-        this.cube.create($('[resizable]'));
+        this.cube.create($('[resizeable]'));
         this.mnu.create($('[moveable]'));
         this.mnu.load();
     }
@@ -20,15 +22,17 @@ class Maneuver {
         this.master = master;
         this.mouse = new MouseRecorder();
         this.target = null;
+        this.targetIndex = -1;
         // offset size to re-center the mouse in object
         this.dist = [];
     }
 
     create(host) {
         let vm = this;
-        host.each(function () {
+        host.each(function (index) {
             $(this).mousedown(e => {
                 vm.master.mnu.target = $(this);
+                vm.master.mnu.targetIndex = index;
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
             });
@@ -60,11 +64,19 @@ class Maneuver {
                     left: e.pageX - vm.dist[0],
                     top: e.pageY - vm.dist[1]
                 });
+
+                // move along with cubes
+                if (vm.targetIndex !== -1) {
+                    let cubes = vm.master.cubes[vm.targetIndex];
+                    console.log(cubes);
+                }
             }
         });
         this.master.omc.container.mouseup(function (e) {
+            // reset everything
             vm.mouse.down = false;
             vm.target = null;
+            vm.targetIndex = -1;
             vm.mouse.recur();
         })
     }
@@ -97,6 +109,7 @@ class Cube {
         let vm = this;
         host.each(function () {
             let cubes = vm.generate($(this))
+            vm.master.cubes.push(cubes);
         });
     }
 
@@ -133,6 +146,7 @@ class Cube {
         let cox = this.size.w / 2;
         let coy = this.size.h / 2;
 
+        // attach cube to four corners of host
         cube.css({
             top: cp[0] - cox, left: cp[1] - coy,
             width: this.size.w,
