@@ -4,6 +4,9 @@
 
         <div class="container">
             <div class="image" resizable></div>
+
+            <div class="image2" resizable></div>
+
         </div>
 
     </div>

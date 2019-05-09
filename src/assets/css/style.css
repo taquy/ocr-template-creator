@@ -2,9 +2,15 @@ body {
     background-color: #000;
 }
 
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
 .container {
     border: 1px solid #eee;
-    height: 800px;
+    height: 1800px;
     width: 1600px;
     background: aliceblue;
     overflow: hidden;
@@ -16,8 +22,18 @@ body {
     background-color: aquamarine;
     left: 150px;
     top: 30px;
-    position: relative;
     cursor: pointer;
+    position: absolute;
+}
+
+.image2 {
+    width: 600px;
+    height: 500px;
+    background-color: coral;
+    left: 550px;
+    top: 170px;
+    cursor: pointer;
+    position: absolute;
 }
 
 .cube {
@@ -28,4 +44,8 @@ body {
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
     border-radius: 50%;
+    cursor: pointer;
+}
+.cube:hover {
+    border: 4px solid cyan;
 }

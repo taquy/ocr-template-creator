@@ -21,6 +21,13 @@ class Cube {
     }
 
     create(host) {
+        let vm = this;
+        host.each(function () {
+            vm.generate($(this))
+        });
+    }
+
+    generate(host) {
         let hpos = host.position();
         let hw = host.width();
         let hh = host.height();
@@ -52,8 +59,6 @@ class Cube {
             cubes.push(cube);
             this.master.omc.container.append(cube);
         }
-
-
     }
 }
 
