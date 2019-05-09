@@ -19,3 +19,13 @@ body {
     position: relative;
     cursor: pointer;
 }
+
+.cube {
+    display: block;
+    position: absolute;
+    z-index: 1;
+    background: crimson;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+}

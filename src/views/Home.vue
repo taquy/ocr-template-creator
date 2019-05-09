@@ -15,10 +15,14 @@
         name: 'home',
         data() {
             return {
-                qtr: new QtRectangy()
+                qtr: null
             }
         },
         mounted() {
+            this.$nextTick(() => {
+                this.qtr = new QtRectangy($('.container'));
+                this.qtr.load();
+            });
         }
     }
 </script>
