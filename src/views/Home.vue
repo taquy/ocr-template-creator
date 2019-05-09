@@ -14,6 +14,8 @@
         name: 'home',
         mounted() {
             require('../assets/js/script')
+            console.log($('[resizable]'))
+
         }
     }
 </script>
