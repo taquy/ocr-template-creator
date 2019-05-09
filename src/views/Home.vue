@@ -3,9 +3,9 @@
     <div class="home">
 
         <div class="container">
-            <div class="image" resizable movable></div>
+            <div class="image" resizable moveable></div>
 
-            <div class="image2" resizable></div>
+            <div class="image2" resizable moveable></div>
 
         </div>
 

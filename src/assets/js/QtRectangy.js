@@ -10,6 +10,7 @@ export class QtRectangy {
 
     load() {
         this.cube.create($('[resizable]'));
+        this.mnu.create($('[moveable]'));
         this.mnu.load();
     }
 }
@@ -20,7 +21,18 @@ class Maneuver {
         this.mouse = new MouseRecorder();
         this.target = null;
         // offset size to re-center the mouse in object
-        this.cpo = [];
+        this.dist = [];
+    }
+
+    create(host) {
+        let vm = this;
+        host.each(function () {
+            $(this).mousedown(e => {
+                vm.master.mnu.target = $(this);
+                vm.master.mnu.mouse.lx = e.pageX;
+                vm.master.mnu.mouse.ly = e.pageY;
+            });
+        });
     }
 
     // load for first time
@@ -30,15 +42,23 @@ class Maneuver {
             vm.mouse.down = true;
             vm.mouse.lx = e.pageX;
             vm.mouse.ly = e.pageY;
+
+            // record distance of mouse and object in first location
+            if (vm.target) {
+                let hpos = vm.target.position();
+                vm.dist[0] = e.pageX - hpos.left;
+                vm.dist[1] = e.pageY - hpos.top;
+            }
         });
 
         this.master.omc.container.mousemove(function (e) {
             vm.mouse.x = e.pageX;
             vm.mouse.y = e.pageY;
             if (vm.target) {
+                // subtract first relative distance record to keep linear motion
                 vm.target.css({
-                    left: e.pageX - vm.cpo[0],
-                    top: e.pageY - vm.cpo[1]
+                    left: e.pageX - vm.dist[0],
+                    top: e.pageY - vm.dist[1]
                 });
             }
         });
@@ -122,7 +142,6 @@ class Cube {
         // attach event of cube
         cube.mousedown(e => {
             this.master.mnu.target = cube;
-            this.master.mnu.cpo = [cox, coy];
             this.master.mnu.mouse.lx = e.pageX;
             this.master.mnu.mouse.ly = e.pageY;
         });
