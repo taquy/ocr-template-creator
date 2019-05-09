@@ -3,7 +3,7 @@
     <div class="home">
 
         <div class="container">
-            <div class="image" resizable></div>
+            <div class="image" resizable movable></div>
 
             <div class="image2" resizable></div>
 
