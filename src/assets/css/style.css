@@ -1,0 +1,21 @@
+body {
+    background-color: #000;
+}
+
+.container {
+    border: 1px solid #eee;
+    height: 800px;
+    width: 1600px;
+    background: aliceblue;
+    overflow: hidden;
+}
+
+.image {
+    width: 600px;
+    height: 500px;
+    background-color: aquamarine;
+    left: 150px;
+    top: 30px;
+    position: relative;
+    cursor: pointer;
+}

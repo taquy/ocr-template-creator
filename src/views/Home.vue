@@ -1,16 +1,20 @@
+
 <template>
     <div class="home">
 
+        <div class="container">
+            <div class="image" resizable></div>
+        </div>
 
     </div>
 </template>
 
 <script>
-    // @ is an alias to /src
-
     export default {
         name: 'home',
-        components: {}
+        mounted() {
+            require('../assets/js/script')
+        }
     }
 </script>
 
