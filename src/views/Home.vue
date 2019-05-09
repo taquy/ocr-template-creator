@@ -10,12 +10,15 @@
 </template>
 
 <script>
+    import { QtRectangy } from '../assets/js/QtRectangy';
     export default {
         name: 'home',
+        data() {
+            return {
+                qtr: new QtRectangy()
+            }
+        },
         mounted() {
-            require('../assets/js/script');
-            console.log($('[resizable]'))
-
         }
     }
 </script>
