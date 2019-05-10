@@ -23,7 +23,6 @@ class Maneuver {
         this.mouse = new MouseRecorder();
         this.target = null;
         this.targetIndex = -1;
-        // offset size to re-center the mouse in object
         this.dist = [];
     }
 
@@ -52,7 +51,20 @@ class Maneuver {
                 let hpos = vm.target.position();
                 vm.dist[0] = e.pageX - hpos.left;
                 vm.dist[1] = e.pageY - hpos.top;
+
+                // move along with cubes
+                if (vm.targetIndex !== -1) {
+                    let cubes = vm.master.cubes[vm.targetIndex];
+                    cubes.forEach(cube => {
+                        let hpos = cube.entity.position();
+                        cube.dist[0] = e.pageX - hpos.left;
+                        cube.dist[1] = e.pageY - hpos.top;
+                    });
+                }
             }
+
+            // move along with cubes
+
         });
 
         this.master.omc.container.mousemove(function (e) {
@@ -68,7 +80,12 @@ class Maneuver {
                 // move along with cubes
                 if (vm.targetIndex !== -1) {
                     let cubes = vm.master.cubes[vm.targetIndex];
-                    console.log(cubes);
+                    cubes.forEach(cube => {
+                        cube.entity.css({
+                            left: e.pageX - cube.dist[0],
+                            top: e.pageY - cube.dist[1]
+                        });
+                    });
                 }
             }
         });
@@ -108,7 +125,7 @@ class Cube {
     create(host) {
         let vm = this;
         host.each(function () {
-            let cubes = vm.generate($(this))
+            let cubes = vm.generate($(this));
             vm.master.cubes.push(cubes);
         });
     }
@@ -131,8 +148,13 @@ class Cube {
         let cubes = [];
         for (let i = 0; i < 4; i++) {
             let cube = this.makeOne(cubePositions[i]);
-            cubes.push(cube);
+
             this.master.omc.container.append(cube);
+
+            // objectify cube
+            let cubeAudit = new CubeAudit(cube);
+            cubeAudit.host = host;
+            cubes.push(cubeAudit);
         }
 
         return cubes;
@@ -164,8 +186,25 @@ class Cube {
     }
 }
 
+class CubeAudit {
+    constructor(entity) {
+        // contain actual cube
+        this.entity = entity;
+
+        // record movement of cube
+        this.mouse = new MouseRecorder();
+
+        // host that cubes are attached to
+        this.host = null;
+
+        this.dist = [];
+    }
+}
+
+
 class ObjectModelContainer {
     constructor() {
         this.container = null;
+        this.cubes = [];
     }
 }
