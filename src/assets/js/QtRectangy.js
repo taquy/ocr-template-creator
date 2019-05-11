@@ -28,6 +28,7 @@ class Maneuver {
         this.cubesGroup = [];
         this.cubeAudit = null;
         this.corr = [];
+        this.hostSize = {};
     }
 
     create(host) {
@@ -95,6 +96,16 @@ class Maneuver {
                     let hposcy = vm.corr.y.entity.position();
                     vm.corr.y.dist[0] = e.pageX - hposcy.left;
                     vm.corr.y.dist[1] = e.pageY - hposcy.top;
+
+                    // set host size
+                    let host = vm.cubeAudit.host;
+                    vm.hostSize = {
+                        w: host.width(),
+                        h: host.height()
+                    };
+
+                    // set cube position
+                    vm.target.opos = { x: hpos.left, y: hpos.top };
                 }
             }
 
@@ -104,6 +115,11 @@ class Maneuver {
             vm.mouse.x = e.pageX;
             vm.mouse.y = e.pageY;
             if (vm.target) {
+
+                // move size
+                let msx = e.pageX - vm.dist[0];
+                let msy = e.pageY - vm.dist[1];
+
                 // check moving target is box
                 if (vm.targetIndex !== -1) {
 
@@ -116,6 +132,7 @@ class Maneuver {
                         });
                     });
                 } else {
+
                     // cube position code
                     var cpc = vm.gps(vm.cubesGroup);
 
@@ -137,12 +154,37 @@ class Maneuver {
                             left: e.pageX - vm.corr.x.dist[0],
                         });
                     }
+
+                    let host = vm.cubeAudit.host;
+                    let hostPos = host.position();
+                    if (cpc.indexOf('L') !== -1) {
+                        host.css({
+                            width: vm.hostSize.w + vm.target.opos.x - msx,
+                            left: msx + vm.target.width() / 2
+                        });
+                    } else if (cpc.indexOf('R') !== -1) {
+                        host.css({
+                            width: (e.pageX - vm.dist[0] - hostPos.left) + vm.target.width() / 2,
+                        });
+                    }
+
+
+                    if (cpc.indexOf('T') !== -1) {
+                        host.css({
+                            height: vm.hostSize.h + vm.target.opos.y - msy,
+                            top: msy + vm.target.height() / 2
+                        });
+                    } else if (cpc.indexOf('B') !== -1) {
+                        host.css({
+                            height: (e.pageY - vm.dist[1] - hostPos.top) + vm.target.height() / 2,
+                        });
+                    }
                 }
 
                 // subtract first relative distance record to keep linear motion
                 vm.target.css({
-                    left: e.pageX - vm.dist[0],
-                    top: e.pageY - vm.dist[1]
+                    left: msx,
+                    top: msy
                 });
             }
         }).mouseup(function (e) {
@@ -317,6 +359,9 @@ class CubeAudit {
         this.host = null;
 
         this.dist = [];
+
+        // original position
+        this.opos = {};
     }
 }
 
