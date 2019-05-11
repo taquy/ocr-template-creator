@@ -27,6 +27,7 @@ class Maneuver {
 
         this.cubesGroup = [];
         this.cubeAudit = null;
+        this.corr = [];
     }
 
     create(host) {
@@ -84,6 +85,16 @@ class Maneuver {
                     let hpos = vm.target.position();
                     vm.cubeAudit.dist[0] = e.pageX - hpos.left;
                     vm.cubeAudit.dist[1] = e.pageY - hpos.top;
+
+                    // calculated original position for correlated cubes
+                    vm.corr = vm.findCorrelatedCubes();
+                    let hposcx = vm.corr.x.entity.position();
+                    vm.corr.x.dist[0] = e.pageX - hposcx.left;
+                    vm.corr.x.dist[1] = e.pageY - hposcx.top;
+
+                    let hposcy = vm.corr.y.entity.position();
+                    vm.corr.y.dist[0] = e.pageX - hposcy.left;
+                    vm.corr.y.dist[1] = e.pageY - hposcy.top;
                 }
             }
 
@@ -109,23 +120,21 @@ class Maneuver {
                     var cpc = vm.gps(vm.cubesGroup);
 
                     // moving correlated x partner and y partner cube
-                    let corr = vm.findCorrelatedCubes();
-
                     /*
                     Idea:
                     - correlated X will change Y if target Y changed
-                    - corellated Y will change X if target X changed
+                    - correlated Y will change X if target X changed
                      */
-                    //
-                    if (corr.y) {
-                        corr.y.css({
-                            top: e.pageY - vm.dist[1]
+
+                    if (vm.corr.y.entity) {
+                        vm.corr.y.entity.css({
+                            top: e.pageY - vm.corr.y.dist[1]
                         });
                     }
 
-                    if (corr.x) {
-                        corr.x.css({
-                            left: e.pageX - vm.dist[0],
+                    if (vm.corr.x.entity) {
+                        vm.corr.x.entity.css({
+                            left: e.pageX - vm.corr.x.dist[0],
                         });
                     }
                 }
@@ -141,24 +150,29 @@ class Maneuver {
             vm.mouse.down = false;
             vm.target = null;
             vm.targetIndex = -1;
+
+            vm.cubesGroup = [];
+            vm.cubeAudit = null;
+
             vm.mouse.recur();
         })
     }
 
     findCorrelatedCubes() {
-        let cubeDoms = this.cubesGroup.map(cubeAudit => cubeAudit.entity);
+        let corrX, corrY;
+        for (let i = 0; i < this.cubesGroup.length; i++) {
+            let item = this.cubesGroup[i].entity;
+            if (item.attr('cube') === this.target.attr('cube')) continue;
+            if (!corrX && item.position().left === this.target.position().left)
+                corrX = this.cubesGroup[i];
 
-        let correlateX = cubeDoms.filter(item => {
-           return item.attr('cube') !== this.target.attr('cube') && item.position().left === this.target.position().left;
-        })[0];
-
-        let correlateY = cubeDoms.filter(item => {
-            return item.attr('cube') !== this.target.attr('cube') && item.position().top === this.target.position().top;
-        })[0];
+            if (!corrY && item.position().top === this.target.position().top)
+                corrY = this.cubesGroup[i];
+        }
 
         return {
-            x: correlateX,
-            y: correlateY
+            x: corrX,
+            y: corrY
         }
     }
 
