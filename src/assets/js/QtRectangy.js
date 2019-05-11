@@ -28,10 +28,22 @@ class Maneuver {
 
     create(host) {
         let vm = this;
-        host.each(function (index) {
+        // there are two types: cropper box and resizing cubes
+        let boxes = host.filter('[box]');
+        let cubes = host.filter('[cube]');
+
+        boxes.each(function (index) {
             $(this).mousedown(e => {
                 vm.master.mnu.target = $(this);
                 vm.master.mnu.targetIndex = index;
+                vm.master.mnu.mouse.lx = e.pageX;
+                vm.master.mnu.mouse.ly = e.pageY;
+            });
+        });
+
+        cubes.each(function (index) {
+            $(this).mousedown(e => {
+                vm.master.mnu.target = $(this);
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
             });
@@ -41,7 +53,7 @@ class Maneuver {
     // load for first time
     load() {
         let vm = this;
-        this.master.omc.container.mousedown(function (e) {
+        $(document).mousedown(function (e) {
             vm.mouse.down = true;
             vm.mouse.lx = e.pageX;
             vm.mouse.ly = e.pageY;
@@ -65,9 +77,7 @@ class Maneuver {
 
             // move along with cubes
 
-        });
-
-        this.master.omc.container.mousemove(function (e) {
+        }).mousemove(function (e) {
             vm.mouse.x = e.pageX;
             vm.mouse.y = e.pageY;
             if (vm.target) {
@@ -77,7 +87,7 @@ class Maneuver {
                     top: e.pageY - vm.dist[1]
                 });
 
-                // move along with cubes
+                // move cubes along with box
                 if (vm.targetIndex !== -1) {
                     let cubes = vm.master.cubes[vm.targetIndex];
                     cubes.forEach(cube => {
@@ -86,16 +96,52 @@ class Maneuver {
                             top: e.pageY - cube.dist[1]
                         });
                     });
+                } else {
+                    // 0: box, 1: cube
+                    var cubeIndex = vm.target.attr('cube').split('.')[0];
+                    var cubesGroup = vm.master.cubes[cubeIndex];
+                    // cube position code
+                    var cpc = vm.gps(cubesGroup);
                 }
             }
-        });
-        this.master.omc.container.mouseup(function (e) {
+        }).mouseup(function (e) {
             // reset everything
             vm.mouse.down = false;
             vm.target = null;
             vm.targetIndex = -1;
             vm.mouse.recur();
         })
+    }
+
+    gps(cubes) {
+        let cbs = cubes.map(cube => cube.entity.position());
+        let cbsx = cbs.map(p => p.left);
+        let cbsy = cbs.map(p => p.top);
+
+        // find min position of four corner cubes
+
+        let x = {
+            max: Math.max.apply(null, cbsx),
+            min: Math.min.apply(null, cbsx),
+        };
+
+        let y = {
+            max: Math.max.apply(null, cbsy),
+            min: Math.min.apply(null, cbsy),
+        };
+
+        // current position
+        var cp = this.target.position();
+        // position code: TL, TR, BL, BR
+        let pc = '';
+
+        if (cp.top >= y.max) pc += 'B';
+        else pc += 'T';
+
+        if (cp.left >= x.max) pc += 'R';
+        else pc += 'L';
+
+        return pc;
     }
 }
 
@@ -147,7 +193,9 @@ class Cube {
         // generate 4 cubes
         let cubes = [];
         for (let i = 0; i < 4; i++) {
-            let cube = this.makeOne(cubePositions[i]);
+            let hostIndex = $('[box]').index(host);
+            let cubeId = hostIndex + '.' + i;
+            let cube = this.makeOne(cubePositions[i], cubeId);
 
             this.master.omc.container.append(cube);
 
@@ -161,7 +209,7 @@ class Cube {
     }
 
     // create single cube
-    makeOne(cp) {
+    makeOne(cp, cubeId) {
         let cube = $("<div>");
         cube.addClass('cube');
 
@@ -176,11 +224,8 @@ class Cube {
         });
 
         // attach event of cube
-        cube.mousedown(e => {
-            this.master.mnu.target = cube;
-            this.master.mnu.mouse.lx = e.pageX;
-            this.master.mnu.mouse.ly = e.pageY;
-        });
+        cube.attr('moveable', '');
+        cube.attr('cube', cubeId);
 
         return cube;
     }
