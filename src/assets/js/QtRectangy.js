@@ -24,6 +24,9 @@ class Maneuver {
         this.target = null;
         this.targetIndex = -1;
         this.dist = [];
+
+        this.cubesGroup = [];
+        this.cubeAudit = null;
     }
 
     create(host) {
@@ -60,6 +63,8 @@ class Maneuver {
 
             // record distance of mouse and object in first location
             if (vm.target) {
+
+                // calculate original position for box
                 let hpos = vm.target.position();
                 vm.dist[0] = e.pageX - hpos.left;
                 vm.dist[1] = e.pageY - hpos.top;
@@ -72,6 +77,13 @@ class Maneuver {
                         cube.dist[0] = e.pageX - hpos.left;
                         cube.dist[1] = e.pageY - hpos.top;
                     });
+                } else {
+                    vm.setTargetEntity();
+
+                    // calculate original position for cube
+                    let hpos = vm.target.position();
+                    vm.cubeAudit.dist[0] = e.pageX - hpos.left;
+                    vm.cubeAudit.dist[1] = e.pageY - hpos.top;
                 }
             }
 
@@ -81,14 +93,10 @@ class Maneuver {
             vm.mouse.x = e.pageX;
             vm.mouse.y = e.pageY;
             if (vm.target) {
-                // subtract first relative distance record to keep linear motion
-                vm.target.css({
-                    left: e.pageX - vm.dist[0],
-                    top: e.pageY - vm.dist[1]
-                });
-
-                // move cubes along with box
+                // check moving target is box
                 if (vm.targetIndex !== -1) {
+
+                    // move cubes along with box
                     let cubes = vm.master.cubes[vm.targetIndex];
                     cubes.forEach(cube => {
                         cube.entity.css({
@@ -97,12 +105,18 @@ class Maneuver {
                         });
                     });
                 } else {
-                    // 0: box, 1: cube
-                    var cubeIndex = vm.target.attr('cube').split('.')[0];
-                    var cubesGroup = vm.master.cubes[cubeIndex];
                     // cube position code
-                    var cpc = vm.gps(cubesGroup);
+                    var cpc = vm.gps(vm.cubesGroup);
+
+                    // moving correlated x partner and y partner cube
+                    let corr = vm.findCorrelatedCubes();
                 }
+
+                // subtract first relative distance record to keep linear motion
+                vm.target.css({
+                    left: e.pageX - vm.dist[0],
+                    top: e.pageY - vm.dist[1]
+                });
             }
         }).mouseup(function (e) {
             // reset everything
@@ -111,6 +125,34 @@ class Maneuver {
             vm.targetIndex = -1;
             vm.mouse.recur();
         })
+    }
+
+    findCorrelatedCubes() {
+        let cubeDoms = this.cubesGroup.map(cubeAudit => cubeAudit.entity);
+
+        let correlateX = cubeDoms.filter(item => {
+           return item.attr('cube') !== this.target.attr('cube') && item.position().left === this.target.position().left;
+        });
+
+        let correlateY = cubeDoms.filter(item => {
+            return item.attr('cube') !== this.target.attr('cube') && item.position().top === this.target.position().top;
+        });
+
+        return {
+            x: correlateX,
+            y: correlateY
+        }
+    }
+
+    setTargetEntity() {
+        // 0: box, 1: cube
+        let entityId = this.target.attr('cube').split('.');
+        let boxIndex = entityId[0];
+        let cubeIndex = entityId[1];
+
+        this.cubesGroup = this.master.cubes[boxIndex];
+        this.cubeAudit = this.cubesGroup[cubeIndex];
+
     }
 
     gps(cubes) {
