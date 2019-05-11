@@ -110,6 +110,24 @@ class Maneuver {
 
                     // moving correlated x partner and y partner cube
                     let corr = vm.findCorrelatedCubes();
+
+                    /*
+                    Idea:
+                    - correlated X will change Y if target Y changed
+                    - corellated Y will change X if target X changed
+                     */
+                    //
+                    if (corr.y) {
+                        corr.y.css({
+                            top: e.pageY - vm.dist[1]
+                        });
+                    }
+
+                    if (corr.x) {
+                        corr.x.css({
+                            left: e.pageX - vm.dist[0],
+                        });
+                    }
                 }
 
                 // subtract first relative distance record to keep linear motion
@@ -132,11 +150,11 @@ class Maneuver {
 
         let correlateX = cubeDoms.filter(item => {
            return item.attr('cube') !== this.target.attr('cube') && item.position().left === this.target.position().left;
-        });
+        })[0];
 
         let correlateY = cubeDoms.filter(item => {
             return item.attr('cube') !== this.target.attr('cube') && item.position().top === this.target.position().top;
-        });
+        })[0];
 
         return {
             x: correlateX,
