@@ -6,6 +6,11 @@ export class QtRectangy {
         this.omc = new ObjectModelContainer();
         this.omc.container = container;
 
+        // re-positioning mode
+        this.strategy = {
+            p: new PositioningStrategy(),
+        };
+
         // actual raw data
         this.cubes = [];
     }
@@ -75,138 +80,13 @@ class Maneuver {
             vm.mouse.lx = e.pageX;
             vm.mouse.ly = e.pageY;
 
-            // record distance of mouse and object in first location
-            if (vm.target) {
-
-                // calculate original position for box
-                let hpos = vm.target.position();
-                vm.dist[0] = e.pageX - hpos.left;
-                vm.dist[1] = e.pageY - hpos.top;
-
-                // move along with cubes
-                if (vm.targetIndex !== -1) {
-                    let cubes = vm.master.cubes[vm.targetIndex];
-                    cubes.forEach(cube => {
-                        let hpos = cube.entity.position();
-                        cube.dist[0] = e.pageX - hpos.left;
-                        cube.dist[1] = e.pageY - hpos.top;
-                    });
-                } else {
-                    vm.setTargetEntity();
-
-                    // calculate original position for cube
-                    let hpos = vm.target.position();
-                    vm.cubeAudit.dist[0] = e.pageX - hpos.left;
-                    vm.cubeAudit.dist[1] = e.pageY - hpos.top;
-
-                    // calculated original position for correlated cubes
-                    vm.corr = vm.findCorrelatedCubes();
-                    let hposcx = vm.corr.x.entity.position();
-                    vm.corr.x.dist[0] = e.pageX - hposcx.left;
-                    vm.corr.x.dist[1] = e.pageY - hposcx.top;
-
-                    let hposcy = vm.corr.y.entity.position();
-                    vm.corr.y.dist[0] = e.pageX - hposcy.left;
-                    vm.corr.y.dist[1] = e.pageY - hposcy.top;
-
-                    // set host size
-                    let host = vm.cubeAudit.host;
-                    vm.hostSize = {
-                        w: host.width(),
-                        h: host.height()
-                    };
-
-                    // set cube position
-                    vm.target.opos = {x: hpos.left, y: hpos.top};
-                }
-            }
-
-            // move along with cubes
+            vm.master.strategy.p.register(vm, e)
 
         }).mousemove(function (e) {
             vm.mouse.x = e.pageX;
             vm.mouse.y = e.pageY;
-            if (vm.target) {
 
-                // move size
-                let msx = e.pageX - vm.dist[0];
-                let msy = e.pageY - vm.dist[1];
-
-                // check moving target is box
-                if (vm.targetIndex !== -1) {
-
-                    // move cubes along with box
-                    let cubes = vm.master.cubes[vm.targetIndex];
-                    cubes.forEach(cube => {
-                        cube.entity.css({
-                            left: e.pageX - cube.dist[0],
-                            top: e.pageY - cube.dist[1]
-                        });
-                    });
-                } else {
-
-                    // moving correlated x partner and y partner cube
-                    /*
-                    Idea:
-                    - correlated X will change Y if target Y changed
-                    - correlated Y will change X if target X changed
-                     */
-
-                    if (vm.corr.y.entity) {
-                        vm.corr.y.entity.css({
-                            top: e.pageY - vm.corr.y.dist[1]
-                        });
-                    }
-
-                    if (vm.corr.x.entity) {
-                        vm.corr.x.entity.css({
-                            left: e.pageX - vm.corr.x.dist[0],
-                        });
-                    }
-                }
-
-                // subtract first relative distance record to keep linear motion
-                vm.target.css({
-                    left: msx,
-                    top: msy
-                });
-
-                // calculate size of new rectangle and its position
-                if (vm.targetIndex === -1) {
-                    // locate root point and width and height of new rectangle
-                    let cdx = vm.cubesGroup.map(audit => audit.entity.position().left);
-                    let cdy = vm.cubesGroup.map(audit => audit.entity.position().top);
-
-                    let minc = {
-                        x: Math.min.apply(null, cdx),
-                        y: Math.min.apply(null, cdy),
-                    };
-
-                    let maxc = {
-                        x: Math.max.apply(null, cdx),
-                        y: Math.max.apply(null, cdy),
-                    };
-
-                    // find root point TL
-                    let rp = vm.cubesGroup.filter(audit => {
-                        return audit.entity.position().left === minc.x &&
-                            audit.entity.position().top === minc.y
-                    })[0];
-
-                    // calculate new width and height
-                    let nw = maxc.x - minc.x;
-                    let nh = maxc.y - minc.y;
-                    let npc = rp.entity.position();
-
-                    // update size and position of box
-                    vm.cubeAudit.host.css({
-                        width: nw,
-                        height: nh,
-                        left: npc.left + vm.target.width() / 2,
-                        top: npc.top + vm.target.height() / 2,
-                    });
-                }
-            }
+            vm.master.strategy.p.action(vm, e);
         }).mouseup(function (e) {
             // reset everything
             vm.mouse.down = false;
@@ -249,6 +129,141 @@ class Maneuver {
 
     }
 
+}
+
+class PositioningStrategy {
+    register(vm, e) {
+        // record distance of mouse and object in first location
+        if (!vm.target) return;
+
+        // calculate original position for box
+        let hpos = vm.target.position();
+        vm.dist[0] = e.pageX - hpos.left;
+        vm.dist[1] = e.pageY - hpos.top;
+
+        // move along with cubes
+        if (vm.targetIndex !== -1) {
+            let cubes = vm.master.cubes[vm.targetIndex];
+            cubes.forEach(cube => {
+                let hpos = cube.entity.position();
+                cube.dist[0] = e.pageX - hpos.left;
+                cube.dist[1] = e.pageY - hpos.top;
+            });
+        } else {
+            vm.setTargetEntity();
+
+            // calculate original position for cube
+            let hpos = vm.target.position();
+            vm.cubeAudit.dist[0] = e.pageX - hpos.left;
+            vm.cubeAudit.dist[1] = e.pageY - hpos.top;
+
+            // calculated original position for correlated cubes
+            vm.corr = vm.findCorrelatedCubes();
+            let hposcx = vm.corr.x.entity.position();
+            vm.corr.x.dist[0] = e.pageX - hposcx.left;
+            vm.corr.x.dist[1] = e.pageY - hposcx.top;
+
+            let hposcy = vm.corr.y.entity.position();
+            vm.corr.y.dist[0] = e.pageX - hposcy.left;
+            vm.corr.y.dist[1] = e.pageY - hposcy.top;
+
+            // set host size
+            let host = vm.cubeAudit.host;
+            vm.hostSize = {
+                w: host.width(),
+                h: host.height()
+            };
+
+            // set cube position
+            vm.target.opos = {x: hpos.left, y: hpos.top};
+        }
+    }
+
+    action(vm, e) {
+        if (!vm.target) return;
+
+        // move size
+        let msx = e.pageX - vm.dist[0];
+        let msy = e.pageY - vm.dist[1];
+
+        // check moving target is box
+        if (vm.targetIndex !== -1) {
+
+            // move cubes along with box
+            let cubes = vm.master.cubes[vm.targetIndex];
+            cubes.forEach(cube => {
+                cube.entity.css({
+                    left: e.pageX - cube.dist[0],
+                    top: e.pageY - cube.dist[1]
+                });
+            });
+        } else {
+
+            // moving correlated x partner and y partner cube
+            /*
+            Idea:
+            - correlated X will change Y if target Y changed
+            - correlated Y will change X if target X changed
+             */
+
+            if (vm.corr.y.entity) {
+                vm.corr.y.entity.css({
+                    top: e.pageY - vm.corr.y.dist[1]
+                });
+            }
+
+            if (vm.corr.x.entity) {
+                vm.corr.x.entity.css({
+                    left: e.pageX - vm.corr.x.dist[0],
+                });
+            }
+        }
+
+        // subtract first relative distance record to keep linear motion
+        vm.target.css({
+            left: msx,
+            top: msy
+        });
+
+        // calculate size of new rectangle and its position
+        if (vm.targetIndex === -1) {
+            // locate root point and width and height of new rectangle
+            let cdx = vm.cubesGroup.map(audit => audit.entity.position().left);
+            let cdy = vm.cubesGroup.map(audit => audit.entity.position().top);
+
+            let minc = {
+                x: Math.min.apply(null, cdx),
+                y: Math.min.apply(null, cdy),
+            };
+
+            let maxc = {
+                x: Math.max.apply(null, cdx),
+                y: Math.max.apply(null, cdy),
+            };
+
+            // find root point TL
+            let rp = vm.cubesGroup.filter(audit => {
+                return audit.entity.position().left === minc.x &&
+                    audit.entity.position().top === minc.y
+            })[0];
+
+            // calculate new width and height
+            let nw = maxc.x - minc.x;
+            let nh = maxc.y - minc.y;
+            let npc = rp.entity.position();
+
+            // update size and position of box
+            vm.cubeAudit.host.css({
+                width: nw,
+                height: nh,
+                left: npc.left + vm.target.width() / 2,
+                top: npc.top + vm.target.height() / 2,
+            });
+
+        }
+        // console.log('moving');
+
+    }
 }
 
 class MouseRecorder {
