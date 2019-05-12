@@ -105,7 +105,7 @@ class Maneuver {
                     };
 
                     // set cube position
-                    vm.target.opos = { x: hpos.left, y: hpos.top };
+                    vm.target.opos = {x: hpos.left, y: hpos.top};
                 }
             }
 
@@ -133,9 +133,6 @@ class Maneuver {
                     });
                 } else {
 
-                    // cube position code
-                    var cpc = vm.gps(vm.cubesGroup);
-
                     // moving correlated x partner and y partner cube
                     /*
                     Idea:
@@ -154,31 +151,6 @@ class Maneuver {
                             left: e.pageX - vm.corr.x.dist[0],
                         });
                     }
-
-                    let host = vm.cubeAudit.host;
-                    let hostPos = host.position();
-                    if (cpc.indexOf('L') !== -1) {
-                        host.css({
-                            width: vm.hostSize.w + vm.target.opos.x - msx,
-                            left: msx + vm.target.width() / 2
-                        });
-                    } else if (cpc.indexOf('R') !== -1) {
-                        host.css({
-                            width: (e.pageX - vm.dist[0] - hostPos.left) + vm.target.width() / 2,
-                        });
-                    }
-
-
-                    if (cpc.indexOf('T') !== -1) {
-                        host.css({
-                            height: vm.hostSize.h + vm.target.opos.y - msy,
-                            top: msy + vm.target.height() / 2
-                        });
-                    } else if (cpc.indexOf('B') !== -1) {
-                        host.css({
-                            height: (e.pageY - vm.dist[1] - hostPos.top) + vm.target.height() / 2,
-                        });
-                    }
                 }
 
                 // subtract first relative distance record to keep linear motion
@@ -186,6 +158,42 @@ class Maneuver {
                     left: msx,
                     top: msy
                 });
+
+                // calculate size of new rectangle and its position
+                if (vm.targetIndex === -1) {
+                    // locate root point and width and height of new rectangle
+                    let cdx = vm.cubesGroup.map(audit => audit.entity.position().left);
+                    let cdy = vm.cubesGroup.map(audit => audit.entity.position().top);
+
+                    let minc = {
+                        x: Math.min.apply(null, cdx),
+                        y: Math.min.apply(null, cdy),
+                    };
+
+                    let maxc = {
+                        x: Math.max.apply(null, cdx),
+                        y: Math.max.apply(null, cdy),
+                    };
+
+                    // find root point TL
+                    let rp = vm.cubesGroup.filter(audit => {
+                        return audit.entity.position().left === minc.x &&
+                            audit.entity.position().top === minc.y
+                    })[0];
+
+                    // calculate new width and height
+                    let nw = maxc.x - minc.x;
+                    let nh = maxc.y - minc.y;
+                    let npc = rp.entity.position();
+
+                    // update size and position of box
+                    vm.cubeAudit.host.css({
+                        width: nw,
+                        height: nh,
+                        left: npc.left + vm.target.width() / 2,
+                        top: npc.top + vm.target.height() / 2,
+                    });
+                }
             }
         }).mouseup(function (e) {
             // reset everything
@@ -229,36 +237,6 @@ class Maneuver {
 
     }
 
-    gps(cubes) {
-        let cbs = cubes.map(cube => cube.entity.position());
-        let cbsx = cbs.map(p => p.left);
-        let cbsy = cbs.map(p => p.top);
-
-        // find min position of four corner cubes
-
-        let x = {
-            max: Math.max.apply(null, cbsx),
-            min: Math.min.apply(null, cbsx),
-        };
-
-        let y = {
-            max: Math.max.apply(null, cbsy),
-            min: Math.min.apply(null, cbsy),
-        };
-
-        // current position
-        var cp = this.target.position();
-        // position code: TL, TR, BL, BR
-        let pc = '';
-
-        if (cp.top >= y.max) pc += 'B';
-        else pc += 'T';
-
-        if (cp.left >= x.max) pc += 'R';
-        else pc += 'L';
-
-        return pc;
-    }
 }
 
 class MouseRecorder {
