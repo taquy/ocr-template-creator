@@ -22,22 +22,27 @@ body {
     background-color: aquamarine;
     left: 150px;
     top: 30px;
+}
+
+[box] {
     cursor: pointer;
     position: absolute;
 }
 
+[box].active {
+    z-index: 1000;
+}
+
+/*this is for sample*/
 .image2 {
     width: 600px;
     height: 500px;
     background-color: coral;
     left: 550px;
     top: 170px;
-    cursor: pointer;
-    position: absolute;
 }
 
 .cube {
-    display: block;
     position: absolute;
     z-index: 1;
     background: crimson;
@@ -50,7 +55,13 @@ body {
     -ms-transition: 0.5s time;
     -o-transition: 0.5s time;
     transition: 0.5s time;
+    display: none;
 }
 .cube:hover {
     border: 4px solid cyan;
+}
+
+.cube.active {
+    z-index: 1001;
+    display: block;
 }

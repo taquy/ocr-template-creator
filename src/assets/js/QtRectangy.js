@@ -27,7 +27,10 @@ class Maneuver {
 
         this.cubesGroup = [];
         this.cubeAudit = null;
+
+        // correlated cubes which move relative to one another
         this.corr = [];
+
         this.hostSize = {};
     }
 
@@ -43,7 +46,16 @@ class Maneuver {
                 vm.master.mnu.targetIndex = index;
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
+
+                // if boxes selected elevated index level of itself and so does its satellite cubes
+                vm.master.omc.container.find('*').removeClass('active');
+                $(this).addClass('active');
+
+                $.each(vm.master.cubes[index], function () {
+                    this.entity.addClass('active');
+                });
             });
+
         });
 
         cubes.each(function (index) {
