@@ -47,11 +47,6 @@ class Maneuver {
         this.target = null;
         this.dist = [];
 
-        this.cubesGroup = [];
-        this.cubeAudit = null;
-
-        // correlated cubes which move relative to one another
-        this.corr = [];
     }
 
     create(host) {
@@ -66,11 +61,14 @@ class Maneuver {
                 vm.master.mnu.target = $(e.target);
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
+
+                vm.master.omc.container.find('*').removeClass('active');
             });
         });
 
         boxes.each(function (index) {
             $(this).mousedown(e => {
+                e.stopPropagation();
                 vm.master.mnu.target = $(e.target);
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
@@ -103,13 +101,16 @@ class Maneuver {
             vm.mouse.lx = e.pageX;
             vm.mouse.ly = e.pageY;
 
-            vm.master.strategy.p.register(vm, e)
+            if (vm.master.opt.p) {
+                vm.master.strategy.p.register(vm, e)
+            }
 
         }).mousemove(function (e) {
             vm.mouse.x = e.pageX;
             vm.mouse.y = e.pageY;
-
-            vm.master.strategy.p.action(vm, e);
+            if (vm.master.opt.p) {
+                vm.master.strategy.p.action(vm, e);
+            }
 
         }).mouseup(function (e) {
             // reset everything
@@ -132,41 +133,24 @@ class Maneuver {
 
         this.target = null;
 
-        this.cubesGroup = [];
-        this.cubeAudit = null;
-    }
-
-    findCorrelatedCubes() {
-        let corrX, corrY;
-        for (let i = 0; i < this.cubesGroup.length; i++) {
-            let item = this.cubesGroup[i].entity;
-            if (item.attr('cube') === this.target.attr('cube')) continue;
-            if (!corrX && item.position().left === this.target.position().left)
-                corrX = this.cubesGroup[i];
-
-            if (!corrY && item.position().top === this.target.position().top)
-                corrY = this.cubesGroup[i];
+        if (this.master) {
+            this.master.strategy.p.cubesGroup = [];
+            this.master.strategy.p.cubeAudit = null;
         }
-
-        return {
-            x: corrX,
-            y: corrY
-        }
-    }
-
-    setTargetEntity() {
-        // 0: box, 1: cube
-        let entityId = this.target.attr('cube').split('.');
-        let boxIndex = entityId[0];
-        let cubeIndex = entityId[1];
-
-        this.cubesGroup = this.master.omc.cubes[boxIndex];
-        this.cubeAudit = this.cubesGroup[cubeIndex];
     }
 
 }
 
 class PositioningStrategy {
+    constructor() {
+        this.cubesGroup = [];
+
+        this.cubeAudit = null;
+
+        // correlated cubes which move relative to one another
+        this.corr = [];
+    }
+
     register(vm, e) {
 
         // record distance of mouse and object in first location
@@ -187,26 +171,27 @@ class PositioningStrategy {
                 cube.dist[1] = e.pageY - hpos.top;
             });
         } else if (vm.target[0].hasAttribute('cube')) {
-            vm.setTargetEntity();
+            this.setTargetEntity(vm);
 
             // calculate original position for cube
             let hpos = vm.target.position();
-            vm.cubeAudit.dist[0] = e.pageX - hpos.left;
-            vm.cubeAudit.dist[1] = e.pageY - hpos.top;
+            this.cubeAudit.dist[0] = e.pageX - hpos.left;
+            this.cubeAudit.dist[1] = e.pageY - hpos.top;
 
             // calculated original position for correlated cubes
-            vm.corr = vm.findCorrelatedCubes();
-            let hposcx = vm.corr.x.entity.position();
-            vm.corr.x.dist[0] = e.pageX - hposcx.left;
-            vm.corr.x.dist[1] = e.pageY - hposcx.top;
+            this.corr = this.findCorrelatedCubes(vm);
+            let hposcx = this.corr.x.entity.position();
+            this.corr.x.dist[0] = e.pageX - hposcx.left;
+            this.corr.x.dist[1] = e.pageY - hposcx.top;
 
-            let hposcy = vm.corr.y.entity.position();
-            vm.corr.y.dist[0] = e.pageX - hposcy.left;
-            vm.corr.y.dist[1] = e.pageY - hposcy.top;
+            let hposcy = this.corr.y.entity.position();
+            this.corr.y.dist[0] = e.pageX - hposcy.left;
+            this.corr.y.dist[1] = e.pageY - hposcy.top;
         }
     }
 
     action(vm, e) {
+
         e.stopPropagation();
         if (!vm.target) return;
 
@@ -233,15 +218,15 @@ class PositioningStrategy {
             - correlated Y will change X if target X changed
              */
 
-            if (vm.corr.y.entity) {
-                vm.corr.y.entity.css({
-                    top: e.pageY - vm.corr.y.dist[1]
+            if (this.corr.y.entity) {
+                this.corr.y.entity.css({
+                    top: e.pageY - this.corr.y.dist[1]
                 });
             }
 
-            if (vm.corr.x.entity) {
-                vm.corr.x.entity.css({
-                    left: e.pageX - vm.corr.x.dist[0],
+            if (this.corr.x.entity) {
+                this.corr.x.entity.css({
+                    left: e.pageX - this.corr.x.dist[0],
                 });
             }
         }
@@ -255,8 +240,8 @@ class PositioningStrategy {
         // calculate size of new rectangle and its position
         if (vm.target[0].hasAttribute('cube')) {
             // locate root point and width and height of new rectangle
-            let cdx = vm.cubesGroup.map(audit => audit.entity.position().left);
-            let cdy = vm.cubesGroup.map(audit => audit.entity.position().top);
+            let cdx = this.cubesGroup.map(audit => audit.entity.position().left);
+            let cdy = this.cubesGroup.map(audit => audit.entity.position().top);
 
             let minc = {
                 x: Math.min.apply(null, cdx),
@@ -269,7 +254,7 @@ class PositioningStrategy {
             };
 
             // find root point TL
-            let rp = vm.cubesGroup.filter(audit => {
+            let rp = this.cubesGroup.filter(audit => {
                 return audit.entity.position().left === minc.x &&
                     audit.entity.position().top === minc.y
             })[0];
@@ -280,7 +265,7 @@ class PositioningStrategy {
             let npc = rp.entity.position();
 
             // update size and position of box
-            vm.cubeAudit.host.css({
+            this.cubeAudit.host.css({
                 width: nw,
                 height: nh,
                 left: npc.left + vm.target.width() / 2,
@@ -290,6 +275,34 @@ class PositioningStrategy {
         }
         // console.log('moving');
 
+    }
+
+    findCorrelatedCubes(vm) {
+        let corrX, corrY;
+        for (let i = 0; i < this.cubesGroup.length; i++) {
+            let item = this.cubesGroup[i].entity;
+            if (item.attr('cube') === vm.target.attr('cube')) continue;
+            if (!corrX && item.position().left === vm.target.position().left)
+                corrX = this.cubesGroup[i];
+
+            if (!corrY && item.position().top === vm.target.position().top)
+                corrY = this.cubesGroup[i];
+        }
+
+        return {
+            x: corrX,
+            y: corrY
+        }
+    }
+
+    setTargetEntity(vm) {
+        // 0: box, 1: cube
+        let entityId = vm.target.attr('cube').split('.');
+        let boxIndex = entityId[0];
+        let cubeIndex = entityId[1];
+
+        this.cubesGroup = vm.master.omc.cubes[boxIndex];
+        this.cubeAudit = this.cubesGroup[cubeIndex];
     }
 }
 
