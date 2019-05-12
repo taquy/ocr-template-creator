@@ -27,7 +27,6 @@ class Maneuver {
         this.master = master;
         this.mouse = new MouseRecorder();
         this.target = null;
-        this.targetIndex = -1;
         this.dist = [];
 
         this.cubesGroup = [];
@@ -42,13 +41,21 @@ class Maneuver {
     create(host) {
         let vm = this;
         // there are two types: cropper box and resizing cubes
+        let canvas = host.filter('[canvas]');
         let boxes = host.filter('[box]');
         let cubes = host.filter('[cube]');
+
+        canvas.each(function (index) {
+            $(this).mousedown(e => {
+                vm.master.mnu.target = $(this);
+                vm.master.mnu.mouse.lx = e.pageX;
+                vm.master.mnu.mouse.ly = e.pageY;
+            });
+        });
 
         boxes.each(function (index) {
             $(this).mousedown(e => {
                 vm.master.mnu.target = $(this);
-                vm.master.mnu.targetIndex = index;
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
 
@@ -91,7 +98,6 @@ class Maneuver {
             // reset everything
             vm.mouse.down = false;
             vm.target = null;
-            vm.targetIndex = -1;
 
             vm.cubesGroup = [];
             vm.cubeAudit = null;
@@ -142,14 +148,15 @@ class PositioningStrategy {
         vm.dist[1] = e.pageY - hpos.top;
 
         // move along with cubes
-        if (vm.targetIndex !== -1) {
-            let cubes = vm.master.cubes[vm.targetIndex];
+        if (vm.target[0].hasAttribute('box')) {
+            let index = $('[box]').index(vm.target);
+            let cubes = vm.master.cubes[index];
             cubes.forEach(cube => {
                 let hpos = cube.entity.position();
                 cube.dist[0] = e.pageX - hpos.left;
                 cube.dist[1] = e.pageY - hpos.top;
             });
-        } else {
+        } else if (vm.target[0].hasAttribute('cube')) {
             vm.setTargetEntity();
 
             // calculate original position for cube
@@ -187,17 +194,16 @@ class PositioningStrategy {
         let msy = e.pageY - vm.dist[1];
 
         // check moving target is box
-        if (vm.targetIndex !== -1) {
-
+        if (vm.target[0].hasAttribute('box')) {
             // move cubes along with box
-            let cubes = vm.master.cubes[vm.targetIndex];
+            let cubes = vm.master.cubes[$('[box]').index(vm.target)];
             cubes.forEach(cube => {
                 cube.entity.css({
                     left: e.pageX - cube.dist[0],
                     top: e.pageY - cube.dist[1]
                 });
             });
-        } else {
+        } else if (vm.target[0].hasAttribute('cube')) {
 
             // moving correlated x partner and y partner cube
             /*
@@ -226,7 +232,7 @@ class PositioningStrategy {
         });
 
         // calculate size of new rectangle and its position
-        if (vm.targetIndex === -1) {
+        if (vm.target[0].hasAttribute('cube')) {
             // locate root point and width and height of new rectangle
             let cdx = vm.cubesGroup.map(audit => audit.entity.position().left);
             let cdy = vm.cubesGroup.map(audit => audit.entity.position().top);
