@@ -7,9 +7,10 @@
 
         <div class="master-container">
 
-            <div class="container" canvas >
+            <div class="container" canvas moveable>
                 <div class="image" box resizeable moveable></div>
                 <div class="image2" box resizeable moveable></div>
+                </div>
             </div>
 
         </div>

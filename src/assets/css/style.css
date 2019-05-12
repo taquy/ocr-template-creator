@@ -18,6 +18,14 @@ body {
     position: relative;
 }
 
+.canvas {
+    background: #fff;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
 .master-container {
     height: 700px;
     width: 1000px;

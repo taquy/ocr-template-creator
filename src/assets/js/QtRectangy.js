@@ -41,13 +41,13 @@ class Maneuver {
     create(host) {
         let vm = this;
         // there are two types: cropper box and resizing cubes
-        let canvas = host.filter('[canvas]');
         let boxes = host.filter('[box]');
         let cubes = host.filter('[cube]');
+        let canvas = host.filter('[canvas]');
 
-        canvas.each(function (index) {
+        canvas.each(function () {
             $(this).mousedown(e => {
-                vm.master.mnu.target = $(this);
+                vm.master.mnu.target = $(e.target);
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
             });
@@ -55,7 +55,7 @@ class Maneuver {
 
         boxes.each(function (index) {
             $(this).mousedown(e => {
-                vm.master.mnu.target = $(this);
+                vm.master.mnu.target = $(e.target);
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
 
@@ -82,7 +82,7 @@ class Maneuver {
     // load for first time
     load() {
         let vm = this;
-        $(document).mousedown(function (e) {
+        $('html').mousedown(function (e) {
             vm.mouse.down = true;
             vm.mouse.lx = e.pageX;
             vm.mouse.ly = e.pageY;
@@ -94,16 +94,26 @@ class Maneuver {
             vm.mouse.y = e.pageY;
 
             vm.master.strategy.p.action(vm, e);
+
         }).mouseup(function (e) {
             // reset everything
-            vm.mouse.down = false;
-            vm.target = null;
+            vm.closeEvent();
+        });
 
-            vm.cubesGroup = [];
-            vm.cubeAudit = null;
+        $('document').mouseup(this.closeEvent);
+        $(window).on('blur', this.closeEvent);
+        $(document).on('blur', this.closeEvent);
 
-            vm.mouse.recur();
-        })
+    }
+
+    closeEvent() {
+        this.mouse.down = false;
+        this.target = null;
+
+        this.cubesGroup = [];
+        this.cubeAudit = null;
+
+        this.mouse.recur();
     }
 
     findCorrelatedCubes() {
@@ -139,6 +149,7 @@ class Maneuver {
 
 class PositioningStrategy {
     register(vm, e) {
+
         // record distance of mouse and object in first location
         if (!vm.target) return;
 
@@ -187,6 +198,7 @@ class PositioningStrategy {
     }
 
     action(vm, e) {
+        e.stopPropagation();
         if (!vm.target) return;
 
         // move size
