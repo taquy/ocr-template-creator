@@ -1,5 +1,6 @@
 body {
     background-color: #000;
+    color: #fff;
 }
 
 * {
@@ -10,10 +11,26 @@ body {
 
 .container {
     border: 1px solid #eee;
-    height: 1800px;
-    width: 1600px;
+    height: 5000px;
+    width: 5000px;
     background: aliceblue;
     overflow: hidden;
+    position: relative;
+}
+
+.master-container {
+    height: 700px;
+    width: 1000px;
+    overflow: hidden;
+    position: relative;
+}
+
+.container:hover {
+    cursor: grab;
+}
+
+.container:active {
+    cursor: grabbing;
 }
 
 .image {
@@ -22,15 +39,6 @@ body {
     background-color: aquamarine;
     left: 150px;
     top: 30px;
-}
-
-[box] {
-    cursor: pointer;
-    position: absolute;
-}
-
-[box].active {
-    z-index: 1000;
 }
 
 /*this is for sample*/
@@ -42,6 +50,21 @@ body {
     top: 170px;
 }
 
+
+[box] {
+    cursor: grab;
+    position: absolute;
+}
+
+[box].active {
+    z-index: 1000;
+}
+
+[box]:active {
+    cursor: grabbing;
+}
+
+
 .cube {
     position: absolute;
     z-index: 1;
@@ -49,7 +72,7 @@ body {
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
     border-radius: 50%;
-    cursor: pointer;
+    cursor: grab;
     -webkit-transition: 0.5s time;
     -moz-transition: 0.5s time;
     -ms-transition: 0.5s time;
@@ -64,4 +87,8 @@ body {
 .cube.active {
     z-index: 1001;
     display: block;
+}
+
+.cube:active {
+    cursor: grabbing;
 }

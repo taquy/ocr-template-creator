@@ -1,11 +1,16 @@
 
 <template>
     <div class="home">
+        <form>
+            <input type="checkbox" v-model="dragging">Dragging
+        </form>
 
-        <div class="container">
-            <div class="image" box resizeable moveable></div>
+        <div class="master-container">
 
-            <div class="image2" box resizeable moveable></div>
+            <div class="container">
+                <div class="image" box resizeable moveable></div>
+                <div class="image2" box resizeable moveable></div>
+            </div>
 
         </div>
 
@@ -18,7 +23,8 @@
         name: 'home',
         data() {
             return {
-                qtr: null
+                qtr: null,
+                dragging: false,
             }
         },
         mounted() {
@@ -26,6 +32,12 @@
                 this.qtr = new QtRectangy($('.container'));
                 this.qtr.load();
             });
+        },
+
+        watch: {
+            dragging(v) {
+                console.log(v)
+            }
         }
     }
 </script>
