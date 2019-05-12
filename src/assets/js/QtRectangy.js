@@ -11,13 +11,32 @@ export class QtRectangy {
         };
 
         // options
-        
+        this.opt = new OptionMenu();
     }
 
     load() {
         this.cube.create($('[resizeable]'));
         this.mnu.create($('[moveable]'));
         this.mnu.load();
+    }
+}
+
+class OptionMenu {
+    constructor() {
+        this.reset();
+    }
+
+    mode(mode) {
+        this.p = mode === 'DRAGGING';
+        this.d = mode === 'DRAWING';
+
+        // set default option
+        if (!mode) this.reset();
+    }
+
+    reset() {
+        this.p = false;
+        this.d = true;
     }
 }
 

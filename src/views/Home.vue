@@ -9,8 +9,6 @@
 
             <div class="container" canvas moveable>
                 <div class="image" box resizeable moveable></div>
-                <div class="image2" box resizeable moveable></div>
-                </div>
             </div>
 
         </div>
@@ -36,8 +34,9 @@
         },
 
         watch: {
-            dragging(v) {
-                console.log(v)
+            dragging(v = null) {
+                v = v ? 'DRAGGING' : null;
+                this.qtr.opt.mode(v);
             }
         }
     }
