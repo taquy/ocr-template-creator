@@ -3,16 +3,15 @@ export class QtRectangy {
         this.cube = new Cube(this);
         this.mnu = new Maneuver(this);
 
-        this.omc = new ObjectModelContainer();
-        this.omc.container = container;
+        this.omc = new ObjectModelContainer(container);
 
         // re-positioning mode
         this.strategy = {
             p: new PositioningStrategy(),
         };
 
-        // actual raw data
-        this.cubes = [];
+        // options
+        
     }
 
     load() {
@@ -34,8 +33,6 @@ class Maneuver {
 
         // correlated cubes which move relative to one another
         this.corr = [];
-
-        this.hostSize = {};
     }
 
     create(host) {
@@ -63,7 +60,7 @@ class Maneuver {
                 vm.master.omc.container.find('*').removeClass('active');
                 $(this).addClass('active');
 
-                $.each(vm.master.cubes[index], function () {
+                $.each(vm.master.omc.cubes[index], function () {
                     this.entity.addClass('active');
                 });
             });
@@ -107,13 +104,17 @@ class Maneuver {
     }
 
     closeEvent() {
-        this.mouse.down = false;
+        if (this.mouse) {
+            this.mouse.down = false;
+            this.mouse.recur();
+        } else {
+            this.mouse = new MouseRecorder();
+        }
+
         this.target = null;
 
         this.cubesGroup = [];
         this.cubeAudit = null;
-
-        this.mouse.recur();
     }
 
     findCorrelatedCubes() {
@@ -140,9 +141,8 @@ class Maneuver {
         let boxIndex = entityId[0];
         let cubeIndex = entityId[1];
 
-        this.cubesGroup = this.master.cubes[boxIndex];
+        this.cubesGroup = this.master.omc.cubes[boxIndex];
         this.cubeAudit = this.cubesGroup[cubeIndex];
-
     }
 
 }
@@ -161,7 +161,7 @@ class PositioningStrategy {
         // move along with cubes
         if (vm.target[0].hasAttribute('box')) {
             let index = $('[box]').index(vm.target);
-            let cubes = vm.master.cubes[index];
+            let cubes = vm.master.omc.cubes[index];
             cubes.forEach(cube => {
                 let hpos = cube.entity.position();
                 cube.dist[0] = e.pageX - hpos.left;
@@ -184,16 +184,6 @@ class PositioningStrategy {
             let hposcy = vm.corr.y.entity.position();
             vm.corr.y.dist[0] = e.pageX - hposcy.left;
             vm.corr.y.dist[1] = e.pageY - hposcy.top;
-
-            // set host size
-            let host = vm.cubeAudit.host;
-            vm.hostSize = {
-                w: host.width(),
-                h: host.height()
-            };
-
-            // set cube position
-            vm.target.opos = {x: hpos.left, y: hpos.top};
         }
     }
 
@@ -208,7 +198,7 @@ class PositioningStrategy {
         // check moving target is box
         if (vm.target[0].hasAttribute('box')) {
             // move cubes along with box
-            let cubes = vm.master.cubes[$('[box]').index(vm.target)];
+            let cubes = vm.master.omc.cubes[$('[box]').index(vm.target)];
             cubes.forEach(cube => {
                 cube.entity.css({
                     left: e.pageX - cube.dist[0],
@@ -311,7 +301,7 @@ class Cube {
         let vm = this;
         host.each(function () {
             let cubes = vm.generate($(this));
-            vm.master.cubes.push(cubes);
+            vm.master.omc.cubes.push(cubes);
         });
     }
 
@@ -375,23 +365,17 @@ class CubeAudit {
         // contain actual cube
         this.entity = entity;
 
-        // record movement of cube
-        this.mouse = new MouseRecorder();
-
         // host that cubes are attached to
         this.host = null;
 
         this.dist = [];
-
-        // original position
-        this.opos = {};
     }
 }
 
 
 class ObjectModelContainer {
-    constructor() {
-        this.container = null;
+    constructor(container) {
+        this.container = container;
         this.cubes = [];
     }
 }
