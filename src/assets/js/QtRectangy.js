@@ -8,6 +8,7 @@ export class QtRectangy {
         // re-positioning mode
         this.strategy = {
             p: new PositioningStrategy(),
+            d: new DrawingROIStrategy(),
         };
 
         // options
@@ -58,11 +59,12 @@ class Maneuver {
 
         canvas.each(function () {
             $(this).mousedown(e => {
+
                 vm.master.mnu.target = $(e.target);
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
 
-                vm.master.omc.container.find('*').removeClass('active');
+                // vm.master.omc.container.find('*').removeClass('active');
             });
         });
 
@@ -75,11 +77,14 @@ class Maneuver {
 
                 // if boxes selected elevated index level of itself and so does its satellite cubes
                 vm.master.omc.container.find('*').removeClass('active');
-                $(this).addClass('active');
 
-                $.each(vm.master.omc.cubes[index], function () {
-                    this.entity.addClass('active');
-                });
+                if (vm.master.opt.p) {
+                    $(this).addClass('active');
+                    $.each(vm.master.omc.cubes[index], function () {
+                        this.entity.addClass('active');
+                    });
+                }
+
             });
 
         });
@@ -100,9 +105,11 @@ class Maneuver {
             vm.mouse.down = true;
             vm.mouse.lx = e.pageX;
             vm.mouse.ly = e.pageY;
-
             if (vm.master.opt.p) {
+                console.log(123)
                 vm.master.strategy.p.register(vm, e)
+            } else if (vm.master.opt.d) {
+                vm.master.strategy.d.register(vm, e)
             }
 
         }).mousemove(function (e) {
@@ -110,6 +117,8 @@ class Maneuver {
             vm.mouse.y = e.pageY;
             if (vm.master.opt.p) {
                 vm.master.strategy.p.action(vm, e);
+            } else {
+                vm.master.strategy.d.action(vm, e)
             }
 
         }).mouseup(function (e) {
@@ -136,9 +145,58 @@ class Maneuver {
         if (this.master) {
             this.master.strategy.p.cubesGroup = [];
             this.master.strategy.p.cubeAudit = null;
+
+            this.master.strategy.d.target = null;
         }
     }
 
+}
+
+class DrawingROIStrategy {
+    constructor() {
+        this.target = null;
+
+        this.sp = {};
+        this.ep = {};
+    }
+
+    register(vm, e) {
+        this.target = $('<div/>');
+        this.target.addClass('active');
+
+        this.target.attr('box', '');
+        this.target.attr('resizeable', '');
+        this.target.attr('moveable', '');
+        this.target.addClass('image');
+
+        vm.master.omc.container.append(this.target);
+        vm.master.load();
+
+        this.sp = {
+            x: e.pageX,
+            y: e.pageY
+        };
+    }
+
+    action(vm, e) {
+        if (!this.target) return;
+
+        this.ep = {
+            x: e.pageX,
+            y: e.pageY
+        };
+
+        let w = this.ep.x - this.sp.x;
+        let h = this.ep.y - this.sp.y;
+
+        this.target.css({
+            width: w,
+            height: h,
+            left: this.sp.x,
+            top: this.sp.y
+        });
+
+    }
 }
 
 class PositioningStrategy {
@@ -273,7 +331,6 @@ class PositioningStrategy {
             });
 
         }
-        // console.log('moving');
 
     }
 
