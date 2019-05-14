@@ -22,12 +22,14 @@
     import { QtRectangy } from '../assets/js/QtRectangy';
     export default {
         name: 'home',
+
         data() {
             return {
                 qtr: null,
                 dragging: false,
             }
         },
+
         mounted() {
             this.$nextTick(() => {
                 this.qtr = new QtRectangy($('.container'));

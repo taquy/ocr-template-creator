@@ -8,7 +8,7 @@ export class QtRectangy {
         // re-positioning mode
         this.strategy = {
             p: new PositioningStrategy(this),
-            d: new DrawingROIStrategy(),
+            d: new DrawingROIStrategy(this),
         };
 
         // options
@@ -82,9 +82,7 @@ class Maneuver {
                         this.entity.addClass('active');
                     });
                 }
-
             });
-
         });
 
         cubes.each(function (index) {
@@ -138,6 +136,10 @@ class Maneuver {
 
         if (this.master) {
             this.master.strategy.p.cubeAudit = null;
+            let dtarget = this.master.strategy.d.target;
+            if (dtarget && (dtarget.width() < 40 || dtarget.height() < 40)) {
+                dtarget.remove();
+            }
             this.master.strategy.d.target = null;
         }
     }
@@ -145,7 +147,8 @@ class Maneuver {
 }
 
 class DrawingROIStrategy {
-    constructor() {
+    constructor(vm) {
+        this.master = vm;
         this.target = null;
 
         this.sp = {};
@@ -154,6 +157,8 @@ class DrawingROIStrategy {
 
     register(vm, e) {
         this.target = $('<div/>');
+
+        this.master.omc.container.find('*').removeClass('active');
         this.target.addClass('active');
 
         this.target.attr('box', '');
@@ -396,7 +401,7 @@ class Cube {
     constructor(master) {
         this.master = master;
         this.size = {
-            w: 30, h: 30
+            w: 25, h: 25
         };
 
         // create 4 cubes
