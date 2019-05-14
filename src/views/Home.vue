@@ -9,7 +9,8 @@
 
             <div class="container" canvas moveable>
                 <!--<div class="paint"></div>-->
-                <div class="image" box resizeable moveable></div>
+                <!--<div class="image" box resizeable moveable></div>-->
+                <!--<div class="image2" box resizeable moveable></div>-->
             </div>
 
         </div>
@@ -24,7 +25,7 @@
         data() {
             return {
                 qtr: null,
-                dragging: true,
+                dragging: false,
             }
         },
         mounted() {
@@ -32,7 +33,7 @@
                 this.qtr = new QtRectangy($('.container'));
                 this.qtr.load();
 
-                this.qtr.opt.mode('DRAGGING');
+                this.qtr.opt.mode('DRAWING');
             });
         },
 

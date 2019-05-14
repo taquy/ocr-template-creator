@@ -69,14 +69,13 @@ class Maneuver {
 
         boxes.each(function (index) {
             $(this).mousedown(e => {
-                e.stopPropagation();
+                // e.stopPropagation();
                 vm.master.mnu.target = $(e.target);
-                vm.master.mnu.mouse.lx = e.pageX;
-                vm.master.mnu.mouse.ly = e.pageY;
 
                 // if boxes selected elevated index level of itself and so does its satellite cubes
                 vm.master.omc.container.find('*').removeClass('active');
                 vm.master.cube.attach($(e.target));
+
                 if (vm.master.opt.p) {
                     $(this).addClass('active');
                     $.each(vm.master.cube.cubes, function () {
@@ -102,8 +101,7 @@ class Maneuver {
         let vm = this;
         $('html').mousedown(function (e) {
             vm.mouse.down = true;
-            vm.mouse.lx = e.pageX;
-            vm.mouse.ly = e.pageY;
+
             if (vm.master.opt.p) {
                 vm.master.strategy.p.register(vm, e)
             } else if (vm.master.opt.d) {
@@ -111,8 +109,6 @@ class Maneuver {
             }
 
         }).mousemove(function (e) {
-            vm.mouse.x = e.pageX;
-            vm.mouse.y = e.pageY;
             if (vm.master.opt.p) {
                 vm.master.strategy.p.action(vm, e);
             } else {
@@ -141,9 +137,7 @@ class Maneuver {
         this.target = null;
 
         if (this.master) {
-            this.master.strategy.p.cubesGroup = [];
             this.master.strategy.p.cubeAudit = null;
-
             this.master.strategy.d.target = null;
         }
     }
@@ -174,9 +168,15 @@ class DrawingROIStrategy {
             x: e.pageX,
             y: e.pageY
         };
+
+        this.target.css({
+            width: 0,
+            height: 0,
+        });
     }
 
     action(vm, e) {
+
         if (!this.target) return;
 
         this.ep = {
@@ -184,14 +184,24 @@ class DrawingROIStrategy {
             y: e.pageY
         };
 
-        let w = this.ep.x - this.sp.x;
-        let h = this.ep.y - this.sp.y;
+        let min = { x: 0, y: 0 };
+        let max = { x: 0, y: 0 };
+
+        let isMinX = this.sp.x > this.ep.x;
+        let isMaxX = this.sp.y > this.ep.y;
+        min.x = isMinX ? this.ep.x : this.sp.x;
+        max.x = isMinX ? this.sp.x : this.ep.x;
+        min.y = isMaxX ? this.ep.y : this.sp.y;
+        max.y = isMaxX ? this.sp.y : this.ep.y;
+
+        let w = max.x - min.x;
+        let h = max.y - min.y;
 
         this.target.css({
             width: w,
             height: h,
-            left: this.sp.x,
-            top: this.sp.y
+            left: min.x,
+            top: min.y
         });
 
     }
@@ -209,13 +219,15 @@ class PositioningStrategy {
 
     register(vm, e) {
 
-        let cubesGroup = this.master.cube.cubes;
-
         // record distance of mouse and object in first location
         if (!vm.target) return;
 
+        let cubesGroup = this.master.cube.cubes;
+
         // calculate original position for box
         let hpos = vm.target.position();
+
+
         vm.dist[0] = e.pageX - hpos.left;
         vm.dist[1] = e.pageY - hpos.top;
 
@@ -232,8 +244,6 @@ class PositioningStrategy {
             }
 
         } else if (vm.target[0].hasAttribute('cube')) {
-
-
             let entityId = $('[cube]').index(vm.target);
             this.cubeAudit = cubesGroup[entityId];
 
