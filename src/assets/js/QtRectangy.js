@@ -7,10 +7,9 @@ export class QtRectangy {
 
         // re-positioning mode
         this.strategy = {
-            p: new PositioningStrategy(),
+            p: new PositioningStrategy(this),
             d: new DrawingROIStrategy(),
         };
-        this.strategy.p.cubesGroup = this.cube.cubes;
 
         // options
         this.opt = new OptionMenu();
@@ -199,8 +198,8 @@ class DrawingROIStrategy {
 }
 
 class PositioningStrategy {
-    constructor() {
-        this.cubesGroup = [];
+    constructor(vm) {
+        this.master = vm;
 
         this.cubeAudit = null;
 
@@ -209,6 +208,8 @@ class PositioningStrategy {
     }
 
     register(vm, e) {
+
+        let cubesGroup = this.master.cube.cubes;
 
         // record distance of mouse and object in first location
         if (!vm.target) return;
@@ -231,8 +232,10 @@ class PositioningStrategy {
             }
 
         } else if (vm.target[0].hasAttribute('cube')) {
+
+
             let entityId = $('[cube]').index(vm.target);
-            this.cubeAudit = this.cubesGroup[entityId];
+            this.cubeAudit = cubesGroup[entityId];
 
             // calculate original position for cube
             let hpos = vm.target.position();
@@ -241,13 +244,14 @@ class PositioningStrategy {
 
             // calculated original position for correlated cubes
             this.corr = this.findCorrelatedCubes(vm);
-            // let hposcx = this.corr.x.entity.position();
-            // this.corr.x.dist[0] = e.pageX - hposcx.left;
-            // this.corr.x.dist[1] = e.pageY - hposcx.top;
-            //
-            // let hposcy = this.corr.y.entity.position();
-            // this.corr.y.dist[0] = e.pageX - hposcy.left;
-            // this.corr.y.dist[1] = e.pageY - hposcy.top;
+
+            let hposcx = this.corr.x.entity.position();
+            this.corr.x.dist[0] = e.pageX - hposcx.left;
+            this.corr.x.dist[1] = e.pageY - hposcx.top;
+
+            let hposcy = this.corr.y.entity.position();
+            this.corr.y.dist[0] = e.pageX - hposcy.left;
+            this.corr.y.dist[1] = e.pageY - hposcy.top;
         }
     }
 
@@ -255,6 +259,8 @@ class PositioningStrategy {
 
         e.stopPropagation();
         if (!vm.target) return;
+
+        let cubesGroup = this.master.cube.cubes;
 
         // move size
         let msx = e.pageX - vm.dist[0];
@@ -303,8 +309,8 @@ class PositioningStrategy {
         if (vm.target[0].hasAttribute('cube')) {
 
             // locate root point and width and height of new rectangle
-            let cdx = this.cubesGroup.map(audit => audit.entity.position().left);
-            let cdy = this.cubesGroup.map(audit => audit.entity.position().top);
+            let cdx = cubesGroup.map(audit => audit.entity.position().left);
+            let cdy = cubesGroup.map(audit => audit.entity.position().top);
 
             let minc = {
                 x: Math.min.apply(null, cdx),
@@ -317,7 +323,7 @@ class PositioningStrategy {
             };
 
             // find root point TL
-            let rp = this.cubesGroup.filter(audit => {
+            let rp = cubesGroup.filter(audit => {
                 return audit.entity.position().left === minc.x &&
                     audit.entity.position().top === minc.y
             })[0];
@@ -341,7 +347,7 @@ class PositioningStrategy {
 
     findCorrelatedCubes(vm) {
         let corrX, corrY;
-        let cubes = this.cubesGroup;
+        let cubes = this.master.cube.cubes;
 
         for (let i = 0; i < cubes.length; i++) {
 
@@ -350,14 +356,10 @@ class PositioningStrategy {
             if (item.attr('cube') === vm.target.attr('cube')) continue;
 
             if (!corrX && item.position().left === vm.target.position().left)
-                corrX = cubes[i][i];
+                corrX = cubes[i];
 
             if (!corrY && item.position().top === vm.target.position().top)
-                corrY = cubes[i][i];
-
-            console.log(item);
-            console.log(vm.target);
-
+                corrY = cubes[i];
         }
 
         return {
@@ -389,7 +391,7 @@ class Cube {
 
         // create 4 cubes
         this.cubes = Array.from(Array(4), ((_, i) => {
-            let cube = this.makeOne();
+            let cube = this.makeOne(i);
             this.master.omc.container.append(cube);
             return new CubeAudit(i, cube);
         }));
@@ -419,7 +421,7 @@ class Cube {
     }
 
     // create single cube
-    makeOne() {
+    makeOne(cubeId) {
         let cube = $("<div>");
         cube.addClass('cube');
 
@@ -431,7 +433,7 @@ class Cube {
 
         // attach event of cube
         cube.attr('moveable', '');
-        cube.attr('cube', '');
+        cube.attr('cube', cubeId);
 
         return cube;
     }
