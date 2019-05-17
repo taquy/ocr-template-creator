@@ -3,6 +3,10 @@ body {
     color: #fff;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 .home,
 .app
 {

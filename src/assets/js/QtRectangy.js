@@ -52,32 +52,6 @@ class Zoomer {
     }
 
     load() {
-        // collect original size and position of element
-        let pos = $('.container').position();
-        this.size = {
-            ctn: {
-                w: $('.container').width(),
-                h: $('.container').height(),
-                x: pos.left,
-                y: pos.top
-            },
-            boxes: [],
-        };
-
-        let vm = this;
-        // size of first register boxes
-        $('[box]').each(function () {
-            let pos = $(this).position();
-
-            vm.size.boxes.push({
-                w: $(this).width(),
-                h: $(this).height(),
-                x: pos.left,
-                y: pos.top,
-                // default ratio of box
-                r: 1
-            });
-        });
         $('.master-container').off('wheel').on('wheel', e => {
             this.zoom(e);
         });
@@ -94,61 +68,41 @@ class Zoomer {
         let isUp = e.originalEvent.deltaY < 0;
 
         // find new ratio for container
-        let c = this.current;
-        c = isUp ? c + step : c - step;
-        this.current = c;
+        let r = isUp ? 10200 : 9780;
 
         // update style of elements
-
-        let nwc = this.size.ctn.w * c;
-        let nhc = this.size.ctn.h * c;
-        $('.container').css({
-            width: nwc,
-            height: nhc
-        });
-
-        let vm = this;
-        $('[box]').each(function (i) {
-            let bp = vm.size.boxes[i];
-
-            // find new ratio for box
-            bp.r = isUp ? bp.r + step : bp.r - step;
-            $(this).css({
-                width: bp.w * bp.r,
-                height: bp.h * bp.r,
-                top: bp.x * bp.r,
-                left: bp.y * bp.r
-            });
-        });
-    }
-
-    restartSize(host) {
-        let hostIndex = $('[box]').index(host);
-        let bs = this.size.boxes[hostIndex];
-
-        let bsp = host.position();
-        bs.w = host.width();
-        bs.h = host.height();
-        bs.x = bsp.left;
-        bs.y = bsp.top;
-        bs.r = 1;
-        this.current = 1;
-
         let ctn = $('.container');
-        let pos = ctn.position();
-        this.size.ctn.w = ctn.width();
-        this.size.ctn.h = ctn.height();
-        this.size.ctn.x = pos.left;
-        this.size.ctn.y = pos.top;
-    }
 
-    restartPosition(host) {
-        let hostIndex = $('[box]').index(host);
-        let bs = this.size.boxes[hostIndex];
-        let bsp = host.position();
-        bs.x = bsp.left;
-        bs.y = bsp.top;
-        console.log(bs);
+        $('.container').css({
+            width: ctn.width() * r/10000,
+            height: ctn.height() * r/10000
+        });
+
+
+        // resize box
+        let p = $('[box]').position();
+
+
+        let ow = (8 + $('[box]').width());
+        let oh = (8 + $('[box]').height());
+        console.log(' old width: ' + ow);
+
+        let nw = (ow * r) /10000;
+        let nh = (oh * r) /10000;
+        console.log(' new width: ' + nw);
+
+        let cw = (r - (ow / nw));
+        let ch = (r - (oh / nh));
+        console.log(r)
+        // resize the box
+        $('[box]').css({
+            width: nw,
+            height: nh,
+            top: (p.top * r) /10000,
+            left: (p.left * r) /10000
+        });
+
+        console.log(' after resize: ' + (parseFloat($('[box]').width()) + 8))
     }
 }
 
@@ -503,10 +457,10 @@ class PositioningStrategy {
             });
 
             // store position and size of host relative to original position and size
-            vm.master.zoom.restartSize(host);
+            // vm.master.zoom.restartSize(host);
 
         } else if (isBox) {
-            vm.master.zoom.restartPosition(vm.target);
+            // vm.master.zoom.restartPosition(vm.target);
         }
     }
 
