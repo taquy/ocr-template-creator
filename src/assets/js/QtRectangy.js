@@ -68,14 +68,14 @@ class Zoomer {
         let isUp = e.originalEvent.deltaY < 0;
 
         // find new ratio for container
-        let r = isUp ? 10200 : 9780;
+        let r = isUp ? 1.02 : 0.98;
 
         // update style of elements
         let ctn = $('.container');
 
         $('.container').css({
-            width: ctn.width() * r/10000,
-            height: ctn.height() * r/10000
+            width: ctn.width() * r,
+            height: ctn.height() * r
         });
 
 
@@ -87,8 +87,8 @@ class Zoomer {
         let oh = (8 + $('[box]').height());
         console.log(' old width: ' + ow);
 
-        let nw = (ow * r) /10000;
-        let nh = (oh * r) /10000;
+        let nw = ow * r;
+        let nh = oh * r;
         console.log(' new width: ' + nw);
 
         let cw = (r - (ow / nw));
@@ -98,8 +98,8 @@ class Zoomer {
         $('[box]').css({
             width: nw,
             height: nh,
-            top: (p.top * r) /10000,
-            left: (p.left * r) /10000
+            top: p.top * r,
+            left: p.left * r
         });
 
         console.log(' after resize: ' + (parseFloat($('[box]').width()) + 8))
