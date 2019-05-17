@@ -44,6 +44,15 @@ body {
     position: relative;
 }
 
+.container {
+    transform-origin: top left;
+    background-image: url('http://softghar.com/Images/POS_Hardware/Bill_Sample/bill_size_79mm.jpg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-origin: content-box, border-box;
+}
+
 .container:hover {
     cursor: grab;
 }
@@ -53,18 +62,15 @@ body {
 }
 
 .image {
-    background-color: transparent;
     border: 1px dashed lightcoral;
-    width: 600px;
-    height: 500px;
 }
 
 /*this is for sample*/
 .image2 {
     width: 600px;
     height: 500px;
-    background-color: coral;
-    left: 550px;
+    /*background-color: coral;*/
+    left: 250px;
     top: 170px;
 }
 
@@ -87,12 +93,13 @@ body {
 .cube {
     position: absolute;
     z-index: 1;
-    background: transparent;
+    /*background: transparent;*/
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
     border-radius: 50%;
     cursor: grab;
     display: none;
+    background: blue;
 }
 .cube:hover {
     border: 2px solid cyan;
@@ -105,4 +112,24 @@ body {
 
 .cube:active {
     cursor: grabbing;
+}
+
+.label {
+    min-width: 50px;
+    font-size: 30px;
+    display: block;
+    overflow: hidden;
+    position: absolute;
+    color: #000;
+    padding-left: 5px;
+    top: -35px;
+    font-family: Helvetica, sans-serif, Arial;
+    height: 35px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    border: none;
+    background: transparent;
+    left: -1px;
+    outline: none;
+    font-variant: small-caps;
 }

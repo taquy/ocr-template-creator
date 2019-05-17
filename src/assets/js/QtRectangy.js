@@ -11,6 +11,9 @@ export class QtRectangy {
             d: new DrawingROIStrategy(this),
         };
 
+        // set zoomer
+        this.zoom = new Zoomer(this);
+
         // options
         this.opt = new OptionMenu();
     }
@@ -18,6 +21,7 @@ export class QtRectangy {
     load() {
         this.mnu.create($('[moveable]'));
         this.mnu.load();
+        this.zoom.load();
     }
 }
 
@@ -40,6 +44,78 @@ class OptionMenu {
     }
 }
 
+class Zoomer {
+    constructor(master) {
+        this.master = master;
+        // ratio
+        this.current = 1;
+    }
+
+    load() {
+        // collect original size and position of element
+        let pos = $('.container').position();
+        this.size = {
+            ctn: {
+                w: $('.container').width(),
+                h: $('.container').height(),
+                x: pos.left,
+                y: pos.top
+            },
+            boxes: [],
+        };
+
+        let vm = this;
+        // size of first register boxes
+        $('[box]').each(function () {
+            let pos = $(this).position();
+
+            vm.size.boxes.push({
+                w: $(this).width(),
+                h: $(this).height(),
+                x: pos.left,
+                y: pos.top
+            });
+        });
+        $('.master-container').off('wheel').on('wheel', e => {
+            this.zoom(e);
+        });
+    }
+
+    zoom(e) {
+        this.master.omc.container.find('*').removeClass('active');
+
+        let step = 0.01;
+
+        let isUp = e.originalEvent.deltaY < 0;
+
+        // find new ratio
+        let c = this.current;
+        c = isUp ? c + step : c - step;
+        this.current = c;
+
+        // update style of elements
+        $('.container').css({
+            width: this.size.ctn.w * c,
+            height: this.size.ctn.h * c
+        });
+
+        let vm = this;
+        $('[box]').each(function (i) {
+            let bp = vm.size.boxes[i];
+            let ow = bp.w;
+            let oh = bp.h;
+
+
+            $(this).css({
+                width: bp.w * c,
+                height: bp.h * c,
+                top: bp.x * c,
+                left: bp.y * c
+            });
+        });
+    }
+}
+
 class Maneuver {
     constructor(master) {
         this.master = master;
@@ -57,18 +133,15 @@ class Maneuver {
         let canvas = host.filter('[canvas]');
 
         canvas.each(function () {
-            $(this).mousedown(e => {
-
+            $(this).off('mousedown').mousedown(e => {
                 vm.master.mnu.target = $(e.target);
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
-
-                // vm.master.omc.container.find('*').removeClass('active');
             });
         });
 
-        boxes.each(function (index) {
-            $(this).mousedown(e => {
+        boxes.each(function () {
+            $(this).off('mousedown').mousedown(e => {
                 // e.stopPropagation();
                 vm.master.mnu.target = $(e.target);
 
@@ -85,8 +158,8 @@ class Maneuver {
             });
         });
 
-        cubes.each(function (index) {
-            $(this).mousedown(e => {
+        cubes.each(function () {
+            $(this).off('mousedown').mousedown(e => {
                 vm.master.mnu.target = $(this);
                 vm.master.mnu.mouse.lx = e.pageX;
                 vm.master.mnu.mouse.ly = e.pageY;
@@ -97,7 +170,9 @@ class Maneuver {
     // load for first time
     load() {
         let vm = this;
-        $('html').mousedown(function (e) {
+
+
+        $('html').off('mousedown').mousedown(function (e) {
             vm.mouse.down = true;
 
             if (vm.master.opt.p) {
@@ -106,21 +181,21 @@ class Maneuver {
                 vm.master.strategy.d.register(vm, e)
             }
 
-        }).mousemove(function (e) {
+        }).off('mousemove').mousemove(function (e) {
             if (vm.master.opt.p) {
                 vm.master.strategy.p.action(vm, e);
             } else {
                 vm.master.strategy.d.action(vm, e)
             }
 
-        }).mouseup(function (e) {
+        }).off('mouseup').mouseup(function (e) {
             // reset everything
             vm.closeEvent();
         });
 
-        $('document').mouseup(this.closeEvent);
-        $(window).on('blur', this.closeEvent);
-        $(document).on('blur', this.closeEvent);
+        $('document').off('mouseup').mouseup(this.closeEvent);
+        $(window).off('blur').on('blur', this.closeEvent);
+        $(document).off('blur').on('blur', this.closeEvent);
 
     }
 
@@ -155,7 +230,16 @@ class DrawingROIStrategy {
         this.ep = {};
     }
 
+    randBg() {
+        let x = Math.floor(Math.random() * 256);
+        let y = Math.floor(Math.random() * 256);
+        let z = Math.floor(Math.random() * 256);
+        return "rgb(" + x + "," + y + "," + z + ")";
+    }
+
     register(vm, e) {
+
+        // create new box
         this.target = $('<div/>');
 
         this.master.omc.container.find('*').removeClass('active');
@@ -165,6 +249,40 @@ class DrawingROIStrategy {
         this.target.attr('resizeable', '');
         this.target.attr('moveable', '');
         this.target.addClass('image');
+        this.target.css({
+            borderColor: this.randBg()
+        });
+
+        // create new label
+        let label = $('<input class="label"/>');
+        let labelBg = this.target.css("borderColor");
+        labelBg = labelBg.split(",");
+
+        if (labelBg.length === 4) {
+            labelBg[labelBg.length - 1] = 0.5 + ")";
+        } else if (labelBg.length === 3) {
+            labelBg[labelBg.length - 1] = labelBg[labelBg.length - 1].replace(/[)]+/g, '');
+            labelBg.push(0.5 + ")");
+        }
+
+        labelBg = labelBg.join(",");
+
+        label.css({
+            backgroundColor: labelBg
+        });
+
+        function resizeInput() {
+            $(this).attr('size', $(this).val().length);
+        }
+
+        label.off('keyup')
+            .keyup(resizeInput)
+            .each(resizeInput);
+
+        // label.keyup(function (e) {
+        //     console.log(e);
+        // });
+        this.target.append(label);
 
         vm.master.omc.container.append(this.target);
         vm.master.load();
@@ -189,8 +307,8 @@ class DrawingROIStrategy {
             y: e.pageY
         };
 
-        let min = { x: 0, y: 0 };
-        let max = { x: 0, y: 0 };
+        let min = {x: 0, y: 0};
+        let max = {x: 0, y: 0};
 
         let isMinX = this.sp.x > this.ep.x;
         let isMaxX = this.sp.y > this.ep.y;
@@ -202,11 +320,17 @@ class DrawingROIStrategy {
         let w = max.x - min.x;
         let h = max.y - min.y;
 
+        let ctnp = $('.container').position();
+        let offset = {
+            x: ctnp.left,
+            y: ctnp.top,
+        };
+
         this.target.css({
             width: w,
             height: h,
-            left: min.x,
-            top: min.y
+            left: min.x - offset.x,
+            top: min.y - offset.y
         });
 
     }
@@ -271,57 +395,37 @@ class PositioningStrategy {
     }
 
     action(vm, e) {
-
         e.stopPropagation();
         if (!vm.target) return;
 
-        let cubesGroup = this.master.cube.cubes;
+        this.preAct(vm, e);
 
+        // subtract first relative distance record to keep linear motion
+        this.onAct(vm, e);
+
+        // calculate size of new rectangle and its position
+        this.postAct(vm, e);
+
+    }
+
+    onAct(vm, e) {
         // move size
         let msx = e.pageX - vm.dist[0];
         let msy = e.pageY - vm.dist[1];
 
-        // check moving target is box
-        if (vm.target[0].hasAttribute('box')) {
+        var isMovable = vm.target[0].hasAttribute('moveable');
 
-            // move cubes along with box
-            vm.master.cube.cubes.forEach(cube => {
-                cube.entity.css({
-                    left: e.pageX - cube.dist[0],
-                    top: e.pageY - cube.dist[1]
-                });
-            });
+        if (!isMovable) return;
 
-        } else if (vm.target[0].hasAttribute('cube')) {
-
-            // moving correlated x partner and y partner cube
-            /*
-            Idea:
-            - correlated X will change Y if target Y changed
-            - correlated Y will change X if target X changed
-             */
-
-            if (this.corr.y.entity) {
-                this.corr.y.entity.css({
-                    top: e.pageY - this.corr.y.dist[1]
-                });
-            }
-
-            if (this.corr.x.entity) {
-                this.corr.x.entity.css({
-                    left: e.pageX - this.corr.x.dist[0],
-                });
-            }
-        }
-
-        // subtract first relative distance record to keep linear motion
         vm.target.css({
             left: msx,
             top: msy
         });
+    }
 
-        // calculate size of new rectangle and its position
+    postAct(vm, e) {
         if (vm.target[0].hasAttribute('cube')) {
+            let cubesGroup = this.master.cube.cubes;
 
             // locate root point and width and height of new rectangle
             let cdx = cubesGroup.map(audit => audit.entity.position().left);
@@ -357,7 +461,41 @@ class PositioningStrategy {
             });
 
         }
+    }
 
+    preAct(vm, e) {
+        // check moving target is box
+        if (vm.target[0].hasAttribute('box')) {
+
+            // move cubes along with box
+            vm.master.cube.cubes.forEach(cube => {
+                cube.entity.css({
+                    left: e.pageX - cube.dist[0],
+                    top: e.pageY - cube.dist[1]
+                });
+            });
+
+        } else if (vm.target[0].hasAttribute('cube')) {
+
+            // moving correlated x partner and y partner cube
+            /*
+            Idea:
+            - correlated X will change Y if target Y changed
+            - correlated Y will change X if target X changed
+             */
+
+            if (this.corr.y.entity) {
+                this.corr.y.entity.css({
+                    top: e.pageY - this.corr.y.dist[1]
+                });
+            }
+
+            if (this.corr.x.entity) {
+                this.corr.x.entity.css({
+                    left: e.pageX - this.corr.x.dist[0],
+                });
+            }
+        }
     }
 
     findCorrelatedCubes(vm) {
@@ -401,7 +539,7 @@ class Cube {
     constructor(master) {
         this.master = master;
         this.size = {
-            w: 25, h: 25
+            w: 15, h: 15
         };
 
         // create 4 cubes
