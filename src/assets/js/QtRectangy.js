@@ -47,7 +47,7 @@ class OptionMenu {
 class Zoomer {
     constructor(master) {
         this.master = master;
-        // ratio
+        // ratio of containers
         this.current = 1;
     }
 
@@ -73,7 +73,9 @@ class Zoomer {
                 w: $(this).width(),
                 h: $(this).height(),
                 x: pos.left,
-                y: pos.top
+                y: pos.top,
+                // default ratio of box
+                r: 1
             });
         });
         $('.master-container').off('wheel').on('wheel', e => {
@@ -82,37 +84,71 @@ class Zoomer {
     }
 
     zoom(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
         this.master.omc.container.find('*').removeClass('active');
 
         let step = 0.01;
 
         let isUp = e.originalEvent.deltaY < 0;
 
-        // find new ratio
+        // find new ratio for container
         let c = this.current;
         c = isUp ? c + step : c - step;
         this.current = c;
 
         // update style of elements
+
+        let nwc = this.size.ctn.w * c;
+        let nhc = this.size.ctn.h * c;
         $('.container').css({
-            width: this.size.ctn.w * c,
-            height: this.size.ctn.h * c
+            width: nwc,
+            height: nhc
         });
 
         let vm = this;
         $('[box]').each(function (i) {
             let bp = vm.size.boxes[i];
-            let ow = bp.w;
-            let oh = bp.h;
 
-
+            // find new ratio for box
+            bp.r = isUp ? bp.r + step : bp.r - step;
             $(this).css({
-                width: bp.w * c,
-                height: bp.h * c,
-                top: bp.x * c,
-                left: bp.y * c
+                width: bp.w * bp.r,
+                height: bp.h * bp.r,
+                top: bp.x * bp.r,
+                left: bp.y * bp.r
             });
         });
+    }
+
+    restartSize(host) {
+        let hostIndex = $('[box]').index(host);
+        let bs = this.size.boxes[hostIndex];
+
+        let bsp = host.position();
+        bs.w = host.width();
+        bs.h = host.height();
+        bs.x = bsp.left;
+        bs.y = bsp.top;
+        bs.r = 1;
+        this.current = 1;
+
+        let ctn = $('.container');
+        let pos = ctn.position();
+        this.size.ctn.w = ctn.width();
+        this.size.ctn.h = ctn.height();
+        this.size.ctn.x = pos.left;
+        this.size.ctn.y = pos.top;
+    }
+
+    restartPosition(host) {
+        let hostIndex = $('[box]').index(host);
+        let bs = this.size.boxes[hostIndex];
+        let bsp = host.position();
+        bs.x = bsp.left;
+        bs.y = bsp.top;
+        console.log(bs);
     }
 }
 
@@ -405,7 +441,6 @@ class PositioningStrategy {
 
         // calculate size of new rectangle and its position
         this.postAct(vm, e);
-
     }
 
     onAct(vm, e) {
@@ -424,7 +459,9 @@ class PositioningStrategy {
     }
 
     postAct(vm, e) {
-        if (vm.target[0].hasAttribute('cube')) {
+        let isCube = vm.target[0].hasAttribute('cube');
+        let isBox = vm.target[0].hasAttribute('box');
+        if (isCube) {
             let cubesGroup = this.master.cube.cubes;
 
             // locate root point and width and height of new rectangle
@@ -450,16 +487,26 @@ class PositioningStrategy {
             // calculate new width and height
             let nw = maxc.x - minc.x;
             let nh = maxc.y - minc.y;
+
+            // calculate new position
             let npc = rp.entity.position();
+            let hnx = npc.left + vm.target.width() / 2;
+            let hny = npc.top + vm.target.height() / 2;
 
             // update size and position of box
-            this.cubeAudit.host.css({
+            let host = this.cubeAudit.host;
+            host.css({
                 width: nw,
                 height: nh,
-                left: npc.left + vm.target.width() / 2,
-                top: npc.top + vm.target.height() / 2,
+                left: hnx,
+                top: hny,
             });
 
+            // store position and size of host relative to original position and size
+            vm.master.zoom.restartSize(host);
+
+        } else if (isBox) {
+            vm.master.zoom.restartPosition(vm.target);
         }
     }
 
@@ -615,7 +662,6 @@ class CubeAudit {
         this.dist = [];
     }
 }
-
 
 class ObjectModelContainer {
     constructor(container) {

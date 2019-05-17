@@ -3,6 +3,12 @@ body {
     color: #fff;
 }
 
+.home,
+.app
+{
+    overflow: hidden;
+}
+
 * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -11,8 +17,8 @@ body {
 
 .container {
     border: 1px solid #eee;
-    height: 5000px;
-    width: 5000px;
+    height: 800px;
+    width: 800px;
     background: aliceblue;
     overflow: hidden;
     position: relative;
@@ -62,16 +68,16 @@ body {
 }
 
 .image {
-    border: 1px dashed lightcoral;
+    border: 4px dashed lightcoral;
 }
 
 /*this is for sample*/
 .image2 {
-    width: 600px;
-    height: 500px;
+    width: 200px;
+    height: 70px;
     /*background-color: coral;*/
-    left: 250px;
-    top: 170px;
+    left: 150px;
+    top: 70px;
 }
 
 
