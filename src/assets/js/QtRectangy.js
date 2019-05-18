@@ -63,46 +63,46 @@ class Zoomer {
 
         this.master.omc.container.find('*').removeClass('active');
 
-        let step = 0.01;
+        let step = 0.02;
 
         let isUp = e.originalEvent.deltaY < 0;
 
-        // find new ratio for container
-        let r = isUp ? 1.02 : 0.98;
-
         // update style of elements
         let ctn = $('.container');
+
+        // find new ratio for container
+        var r = this.current;
+        if (isUp) {
+            r += step;
+        } else {
+            r -= step;
+        }
 
         $('.container').css({
             width: ctn.width() * r,
             height: ctn.height() * r
         });
 
-
         // resize box
-        let p = $('[box]').position();
 
+        $('[box]').each(function (e) {
 
-        let ow = (8 + $('[box]').width());
-        let oh = (8 + $('[box]').height());
-        console.log(' old width: ' + ow);
+            let p = $(this).position();
 
-        let nw = ow * r;
-        let nh = oh * r;
-        console.log(' new width: ' + nw);
+            let ow = $(this).width();
+            let oh = $(this).height();
 
-        let cw = (r - (ow / nw));
-        let ch = (r - (oh / nh));
-        console.log(r)
-        // resize the box
-        $('[box]').css({
-            width: nw,
-            height: nh,
-            top: p.top * r,
-            left: p.left * r
+            let nw = ow * r;
+            let nh = oh * r;
+
+            $(this).css({
+                width: nw,
+                height: nh,
+                top: p.top * r,
+                left: p.left * r
+            });
+
         });
-
-        console.log(' after resize: ' + (parseFloat($('[box]').width()) + 8))
     }
 }
 
