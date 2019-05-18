@@ -38,7 +38,7 @@
                 this.qtr.load();
 
                 // this.qtr.opt.mode('DRAWING');
-                this.qtr.opt.mode('DRAGGING');
+                this.qtr.opt.mode('DRAWING');
             });
         },
 

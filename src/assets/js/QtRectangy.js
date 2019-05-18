@@ -201,10 +201,7 @@ class Maneuver {
 
         if (this.master) {
             this.master.strategy.p.cubeAudit = null;
-            let dtarget = this.master.strategy.d.target;
-            if (dtarget && (dtarget.width() < 40 || dtarget.height() < 40)) {
-                dtarget.remove();
-            }
+            this.master.strategy.d.after();
             this.master.strategy.d.target = null;
         }
     }
@@ -277,10 +274,8 @@ class DrawingROIStrategy {
         vm.master.omc.container.append(this.target);
         vm.master.load();
 
-        this.sp = {
-            x: e.pageX,
-            y: e.pageY
-        };
+
+        this.sp = this.getRatPos(e);
 
         this.target.css({
             width: 0,
@@ -288,14 +283,22 @@ class DrawingROIStrategy {
         });
     }
 
+    getRatPos(e) {
+        let ctnp = $('.container').position();
+        let ctno = $('.container').offset();
+        let mso = $('.master-container').position();
+        var x = e.pageX - mso.left;
+        var y = e.pageY - mso.top;
+        return {
+            x: x, y: y
+        }
+    }
+
     action(vm, e) {
 
         if (!this.target) return;
 
-        this.ep = {
-            x: e.pageX,
-            y: e.pageY
-        };
+        this.ep = this.getRatPos(e);
 
         let min = {x: 0, y: 0};
         let max = {x: 0, y: 0};
@@ -323,6 +326,13 @@ class DrawingROIStrategy {
             top: min.y - offset.y
         });
 
+    }
+
+    after() {
+        let dtarget = this.target;
+        if (dtarget && (dtarget.width() < 20 || dtarget.height() < 20)) {
+            dtarget.remove();
+        }
     }
 }
 
