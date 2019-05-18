@@ -34,7 +34,7 @@
 
         mounted() {
             this.$nextTick(() => {
-                this.qtr = new QtRectangy($('.container'));
+                this.qtr = new QtRectangy();
                 this.qtr.load();
 
                 // this.qtr.opt.mode('DRAWING');

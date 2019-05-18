@@ -1,8 +1,8 @@
 export class QtRectangy {
-    constructor(container) {
+    constructor() {
         this.mnu = new Maneuver(this);
 
-        this.omc = new ObjectModelContainer(container);
+        this.omc = new ObjectModelContainer(this);
         this.cube = new Cube(this);
 
         // re-positioning mode
@@ -14,6 +14,9 @@ export class QtRectangy {
         // set zoomer
         this.zoom = new Zoomer(this);
 
+        // set keyboard
+        this.kw = new KeyWatch(this);
+
         // options
         this.opt = new OptionMenu();
     }
@@ -22,6 +25,7 @@ export class QtRectangy {
         this.mnu.create($('[moveable]'));
         this.mnu.load();
         this.zoom.load();
+        this.kw.load();
     }
 }
 
@@ -41,6 +45,26 @@ class OptionMenu {
     reset() {
         this.p = false;
         this.d = true;
+    }
+}
+
+class KeyWatch {
+    constructor(master) {
+        this.master = master;
+    }
+
+    load() {
+        document.onkeydown = keypress;
+        let vm = this;
+
+        function keypress (e) {
+            let kc = e.keyCode;
+
+            if (kc === 90 && e.ctrlKey) {
+                vm.master.omc.boxes.pop();
+                vm.master.omc.redraw();
+            }
+        }
     }
 }
 
@@ -112,7 +136,6 @@ class Maneuver {
         this.mouse = new MouseRecorder();
         this.target = null;
         this.dist = [];
-
     }
 
     create(host) {
@@ -225,24 +248,35 @@ class DrawingROIStrategy {
     }
 
     register(vm, e) {
+        // create audit and append to
+        this.target = this.draw(vm);
 
+        this.sp = this.getRatPos(e);
+
+        this.target.css({
+            width: 0,
+            height: 0,
+        });
+    }
+
+    draw(vm) {
         // create new box
-        this.target = $('<div/>');
+        let target = $('<div/>');
 
         this.master.omc.container.find('*').removeClass('active');
-        this.target.addClass('active');
+        target.addClass('active');
 
-        this.target.attr('box', '');
-        this.target.attr('resizeable', '');
-        this.target.attr('moveable', '');
-        this.target.addClass('image');
-        this.target.css({
+        target.attr('box', '');
+        target.attr('resizeable', '');
+        target.attr('moveable', '');
+        target.addClass('image');
+        target.css({
             borderColor: this.randBg()
         });
 
         // create new label
         let label = $('<input class="label"/>');
-        let labelBg = this.target.css("borderColor");
+        let labelBg = target.css("borderColor");
         labelBg = labelBg.split(",");
 
         if (labelBg.length === 4) {
@@ -269,29 +303,20 @@ class DrawingROIStrategy {
         // label.keyup(function (e) {
         //     console.log(e);
         // });
-        this.target.append(label);
+        target.append(label);
 
-        vm.master.omc.container.append(this.target);
+        vm.master.omc.container.append( target);
         vm.master.load();
 
-
-        this.sp = this.getRatPos(e);
-
-        this.target.css({
-            width: 0,
-            height: 0,
-        });
+        return target;
     }
 
     getRatPos(e) {
-        let ctnp = $('.container').position();
-        let ctno = $('.container').offset();
         let mso = $('.master-container').position();
-        var x = e.pageX - mso.left;
-        var y = e.pageY - mso.top;
         return {
-            x: x, y: y
-        }
+          x: e.pageX - mso.left,
+          y: e.pageY - mso.top
+        };
     }
 
     action(vm, e) {
@@ -329,9 +354,12 @@ class DrawingROIStrategy {
     }
 
     after() {
-        let dtarget = this.target;
-        if (dtarget && (dtarget.width() < 20 || dtarget.height() < 20)) {
-            dtarget.remove();
+        let tg = this.target;
+        if (tg && (tg.width() < 20 || tg.height() < 20)) {
+            tg.remove();
+        } else {
+            let boxAudit = new BoxAudit(tg);
+            this.master.omc.boxes.push(boxAudit);
         }
     }
 }
@@ -627,8 +655,40 @@ class CubeAudit {
     }
 }
 
+class BoxAudit {
+    constructor(entity = null) {
+        this.set(entity);
+    }
+
+    set(entity) {
+        if (!entity) return;
+        this.entity = entity;
+        this.x = entity.position().left;
+        this.y = entity.position().top;
+        this.w = entity.width();
+        this.h = entity.height();
+    }
+}
+
 class ObjectModelContainer {
-    constructor(container) {
-        this.container = container;
+    constructor(master) {
+        this.master = master;
+        this.container = $('.container');
+        this.boxes = [];
+    }
+
+    redraw() {
+        $('[box]').remove();
+        let vm = this;
+        let drawer = this.master.strategy.d;
+        this.boxes.forEach(function (item) {
+            let target = drawer.draw(vm);
+            target.css({
+                width: item.w,
+                height: item.h,
+                left: item.x,
+                top: item.y
+            });
+        })
     }
 }
