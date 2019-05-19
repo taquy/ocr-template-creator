@@ -8,11 +8,8 @@
         <div class="master-container">
 
             <div class="container" canvas moveable>
-                <!--<div class="paint"></div>-->
-                <!--<div class="image" box resizeable moveable></div>-->
-                <div class="image image2" box resizeable moveable>
-                    <!--<input class="label" value="xxx">-->
-                </div>
+                <!--<div class="image image2" box resizeable moveable>-->
+                <!--</div>-->
             </div>
 
         </div>

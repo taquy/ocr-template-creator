@@ -54,16 +54,26 @@ class KeyWatch {
     }
 
     load() {
-        document.onkeydown = keypress;
         let vm = this;
+        document.onkeydown = keypress;
 
         function keypress (e) {
             let kc = e.keyCode;
+            if (e.ctrlKey) {
+                if (kc === 90) {
+                    let box = vm.master.omc.boxes.pop();
+                    vm.master.omc.removedBoxes.push(box);
+                    vm.master.omc.redraw();
+                }
 
-            if (kc === 90 && e.ctrlKey) {
-                vm.master.omc.boxes.pop();
-                vm.master.omc.redraw();
+                if (kc === 89) {
+                    let box = vm.master.omc.removedBoxes.pop();
+                    if (!box) return;
+                    vm.master.omc.boxes.push(box);
+                    vm.master.omc.redraw();
+                }
             }
+
         }
     }
 }
@@ -663,10 +673,22 @@ class BoxAudit {
     set(entity) {
         if (!entity) return;
         this.entity = entity;
-        this.x = entity.position().left;
-        this.y = entity.position().top;
-        this.w = entity.width();
-        this.h = entity.height();
+
+        let ctns = this.getContainerSize();
+        this.x = entity.position().left / ctns.w;
+        this.y = entity.position().top / ctns.h;
+        this.w = entity.width() / ctns.w;
+        this.h = entity.height() / ctns.h;
+    }
+
+    getContainerSize() {
+        let ctn = $('.container');
+        return {
+            w: ctn.width(),
+            h: ctn.height(),
+            x: ctn.position().left,
+            y: ctn.position().top
+        }
     }
 }
 
@@ -675,6 +697,11 @@ class ObjectModelContainer {
         this.master = master;
         this.container = $('.container');
         this.boxes = [];
+        this.removedBoxes = [];
+    }
+
+    resetUndo() {
+        this.removedBoxes = [];
     }
 
     redraw() {
@@ -682,12 +709,15 @@ class ObjectModelContainer {
         let vm = this;
         let drawer = this.master.strategy.d;
         this.boxes.forEach(function (item) {
+
+            let ctns = item.getContainerSize();
+
             let target = drawer.draw(vm);
             target.css({
-                width: item.w,
-                height: item.h,
-                left: item.x,
-                top: item.y
+                width: item.w * ctns.w,
+                height: item.h * ctns.h,
+                left: item.x * ctns.w,
+                top: item.y * ctns.h,
             });
         })
     }
