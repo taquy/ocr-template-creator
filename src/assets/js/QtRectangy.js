@@ -1,5 +1,11 @@
+let CONTAINER = null;
+
 export class QtRectangy {
     constructor() {
+
+        // load necessary lib code
+        this.lib = new LibCode();
+
         this.mnu = new Maneuver(this);
 
         this.omc = new ObjectModelContainer(this);
@@ -57,7 +63,7 @@ class KeyWatch {
         let vm = this;
         document.onkeydown = keypress;
 
-        function keypress (e) {
+        function keypress(e) {
             let kc = e.keyCode;
             let boxes = vm.master.omc.boxes;
             let rmBoxes = vm.master.omc.removedBoxes;
@@ -108,7 +114,7 @@ class KeyWatch {
                     let target = vm.master.mnu.cachedTarget;
                     console.log(target);
 
-                    vm.master.omc.container.find('*').removeClass('active');
+                    CONTAINER.find('*').removeClass('active');
 
                     // remove from storage and display
                     let boxIndex = boxes.indexOf(target);
@@ -148,9 +154,7 @@ class KeyWatch {
                     });
                     vm.master.cube.attach(target);
                 }
-
             }
-
         }
     }
 
@@ -179,14 +183,14 @@ class Zoomer {
         e.preventDefault();
         e.stopPropagation();
 
-        this.master.omc.container.find('*').removeClass('active');
+        CONTAINER.find('*').removeClass('active');
 
         let step = 0.02;
 
         let isUp = e.originalEvent.deltaY < 0;
 
         // update style of elements
-        let ctn = $('.container');
+        let ctn = CONTAINER;
 
         // find new ratio for container
         var r = this.current;
@@ -196,7 +200,7 @@ class Zoomer {
             r -= step;
         }
 
-        $('.container').css({
+        CONTAINER.css({
             width: ctn.width() * r,
             height: ctn.height() * r
         });
@@ -256,7 +260,7 @@ class Maneuver {
                 vm.master.mnu.cachedTarget = vm.master.omc.boxes[boxIndex];
 
                 // if boxes selected elevated index level of itself and so does its satellite cubes
-                vm.master.omc.container.find('*').removeClass('active');
+                CONTAINER.find('*').removeClass('active');
                 vm.master.cube.attach($(e.target));
 
                 if (vm.master.opt.p) {
@@ -340,7 +344,7 @@ class DrawingROIStrategy {
         let x = Math.floor(Math.random() * 256);
         let y = Math.floor(Math.random() * 256);
         let z = Math.floor(Math.random() * 256);
-        return "rgb(" + x + "," + y + "," + z + ")";
+        return [x, y, z];
     }
 
     register(vm, e) {
@@ -361,33 +365,24 @@ class DrawingROIStrategy {
         // create new box
         let target = $('<div/>');
 
-        this.master.omc.container.find('*').removeClass('active');
+        CONTAINER.find('*').removeClass('active');
         target.addClass('active');
 
         target.attr('box', '');
         target.attr('resizeable', '');
         target.attr('moveable', '');
         target.addClass('image');
+
+        // change border color
+        let color = this.randBg().join(",");
         target.css({
-            borderColor: this.randBg()
+            borderColor: 'rgb(' + color + ')'
         });
 
         // create new label
         let label = $('<input class="label"/>');
-        let labelBg = target.css("borderColor");
-        labelBg = labelBg.split(",");
-
-        if (labelBg.length === 4) {
-            labelBg[labelBg.length - 1] = 0.5 + ")";
-        } else if (labelBg.length === 3) {
-            labelBg[labelBg.length - 1] = labelBg[labelBg.length - 1].replace(/[)]+/g, '');
-            labelBg.push(0.5 + ")");
-        }
-
-        labelBg = labelBg.join(",");
-
         label.css({
-            backgroundColor: labelBg
+            backgroundColor: 'rgba(' + color + ', 0.5)'
         });
 
         function resizeInput() {
@@ -403,7 +398,7 @@ class DrawingROIStrategy {
         // });
         target.append(label);
 
-        vm.master.omc.container.append( target);
+        CONTAINER.append(target);
         vm.master.load();
 
         return target;
@@ -412,8 +407,8 @@ class DrawingROIStrategy {
     getRatPos(e) {
         let mso = $('.master-container').position();
         return {
-          x: e.pageX - mso.left,
-          y: e.pageY - mso.top
+            x: e.pageX - mso.left,
+            y: e.pageY - mso.top
         };
     }
 
@@ -436,7 +431,7 @@ class DrawingROIStrategy {
         let w = max.x - min.x;
         let h = max.y - min.y;
 
-        let ctnp = $('.container').position();
+        let ctnp = CONTAINER.position();
         let offset = {
             x: ctnp.left,
             y: ctnp.top,
@@ -689,7 +684,7 @@ class Cube {
         // create 4 cubes
         this.cubes = Array.from(Array(4), ((_, i) => {
             let cube = this.makeOne(i);
-            this.master.omc.container.append(cube);
+            CONTAINER.append(cube);
             return new CubeAudit(i, cube);
         }));
     }
@@ -769,28 +764,18 @@ class BoxAudit {
         if (!entity) return;
         this.entity = entity;
 
-        let ctns = this.getContainerSize();
+        let ctns = ObjectModelContainer.getContainerSize();
         this.x = entity.position().left / ctns.w;
         this.y = entity.position().top / ctns.h;
         this.w = entity.width() / ctns.w;
         this.h = entity.height() / ctns.h;
-    }
-
-    getContainerSize() {
-        let ctn = $('.container');
-        return {
-            w: ctn.width(),
-            h: ctn.height(),
-            x: ctn.position().left,
-            y: ctn.position().top
-        }
     }
 }
 
 class ObjectModelContainer {
     constructor(master) {
         this.master = master;
-        this.container = $('.container');
+        CONTAINER = $('.container');
         this.boxes = [];
         this.removedBoxes = [];
 
@@ -803,13 +788,23 @@ class ObjectModelContainer {
         this.removedBoxes = [];
     }
 
+    static getContainerSize() {
+        let ctn = CONTAINER;
+        return {
+            w: ctn.width(),
+            h: ctn.height(),
+            x: ctn.position().left,
+            y: ctn.position().top
+        }
+    }
+
     redraw() {
         $('[box]').remove();
         let vm = this;
         let drawer = this.master.strategy.d;
         this.boxes.forEach(function (item) {
 
-            let ctns = item.getContainerSize();
+            let ctns = ObjectModelContainer.getContainerSize();
 
             let target = drawer.draw(vm);
             target.css({
@@ -819,5 +814,42 @@ class ObjectModelContainer {
                 top: item.y * ctns.h,
             });
         })
+    }
+}
+
+class LibCode {
+    constructor()
+    {
+        (function ($) {
+
+            window.addRule = function (selector, styles, sheet) {
+
+                styles = (function (styles) {
+                    if (typeof styles === "string") return styles;
+                    var clone = "";
+                    for (var p in styles) {
+                        if (styles.hasOwnProperty(p)) {
+                            var val = styles[p];
+                            p = p.replace(/([A-Z])/g, "-$1").toLowerCase(); // convert to dash-case
+                            clone += p + ":" + (p === "content" ? '"' + val + '"' : val) + "; ";
+                        }
+                    }
+                    return clone;
+                }(styles));
+                sheet = sheet || document.styleSheets[document.styleSheets.length - 1];
+
+                if (sheet.insertRule) sheet.insertRule(selector + " {" + styles + "}", sheet.cssRules.length);
+                else if (sheet.addRule) sheet.addRule(selector, styles);
+
+                return this;
+
+            };
+
+            if ($) $.fn.addRule = function (styles, sheet) {
+                addRule(this.selector, styles, sheet);
+                return this;
+            };
+
+        }(window.jQuery));
     }
 }

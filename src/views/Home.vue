@@ -1,18 +1,21 @@
 
 <template>
     <div class="home">
-        <form>
-            <input type="checkbox" v-model="dragging">Dragging
-        </form>
 
         <div class="master-container">
 
             <div class="container" canvas moveable>
-                <!--<div class="image image2" box resizeable moveable>-->
-                <!--</div>-->
+                <div class="image image2" box resizeable moveable>
+                </div>
             </div>
 
         </div>
+
+        <form id="form1" runat="server">
+            <input type="checkbox" v-model="dragging">Dragging
+            <input type="file" id="imgInp" />
+            <img id="blah" src="#" alt="your image" />
+        </form>
 
     </div>
 </template>
