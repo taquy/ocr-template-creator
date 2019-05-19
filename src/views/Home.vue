@@ -13,7 +13,7 @@
 
         <form id="form1" runat="server">
             <input type="checkbox" v-model="dragging">Dragging
-            <input type="file" id="imgInp" />
+            <input type="file" id="imageUpload" />
             <img id="blah" src="#" alt="your image" />
         </form>
 

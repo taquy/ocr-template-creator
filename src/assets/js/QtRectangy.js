@@ -1,4 +1,5 @@
 let CONTAINER = null;
+let IMAGE_UPLOADER = null;
 
 export class QtRectangy {
     constructor() {
@@ -9,6 +10,8 @@ export class QtRectangy {
         this.mnu = new Maneuver(this);
 
         this.omc = new ObjectModelContainer(this);
+        this.ulh = new FileUploaderHandling(this);
+
         this.cube = new Cube(this);
 
         // re-positioning mode
@@ -32,6 +35,7 @@ export class QtRectangy {
         this.mnu.load();
         this.zoom.load();
         this.kw.load();
+        this.ulh.load();
     }
 }
 
@@ -772,10 +776,46 @@ class BoxAudit {
     }
 }
 
+class FileUploaderHandling {
+    constructor(master) {
+        this.master = master;
+    }
+
+    load() {
+        let vm = this;
+        IMAGE_UPLOADER.change(function () {
+            vm.readUrl(this);
+        });
+    }
+
+    readUrl(input) {
+        if (input.files && input.files[0]) {
+            let reader = new FileReader();
+
+            reader.onload = async function (e) {
+                let result = e.target.result;
+
+                let imgSize = await LibCode.getImageDimensions(result);
+
+                CONTAINER.css({
+                    width: imgSize.w,
+                    height: imgSize.h,
+                    backgroundImage: 'url(' + result + ')'
+                });
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+}
+
 class ObjectModelContainer {
     constructor(master) {
         this.master = master;
+
         CONTAINER = $('.container');
+        IMAGE_UPLOADER = $('#imageUpload');
+
         this.boxes = [];
         this.removedBoxes = [];
 
@@ -818,8 +858,8 @@ class ObjectModelContainer {
 }
 
 class LibCode {
-    constructor()
-    {
+    constructor() {
+        // below code snippet is for pseudo element selector
         (function ($) {
 
             window.addRule = function (selector, styles, sheet) {
@@ -852,4 +892,16 @@ class LibCode {
 
         }(window.jQuery));
     }
+
+    // for get size of base64 image
+    static getImageDimensions(file) {
+        return new Promise(function (resolved, rejected) {
+            let i = new Image();
+            i.onload = function () {
+                resolved({w: i.width, h: i.height})
+            };
+            i.src = file
+        })
+    }
+
 }
