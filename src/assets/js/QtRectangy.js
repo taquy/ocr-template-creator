@@ -1,6 +1,7 @@
 let CONTAINER = null;
 let IMAGE_UPLOADER = null;
 let TEMPLATE_UPLOADER = null;
+let MASTER_CONTAINER = null;
 
 export class QtRectangy {
     constructor() {
@@ -206,7 +207,7 @@ class Zoomer {
     }
 
     load() {
-        $('.master-container').off('wheel').on('wheel', e => {
+        MASTER_CONTAINER.off('wheel').on('wheel', e => {
             this.zoom(e);
         });
     }
@@ -436,7 +437,7 @@ class DrawingROIStrategy {
     }
 
     getRatPos(e) {
-        let mso = $('.master-container').position();
+        let mso = MASTER_CONTAINER.position();
         return {
             x: e.pageX - mso.left,
             y: e.pageY - mso.top
@@ -883,6 +884,7 @@ class ObjectModelContainer {
         CONTAINER = $('.container');
         IMAGE_UPLOADER = $('#imageUpload');
         TEMPLATE_UPLOADER = $('#templateUpload');
+        MASTER_CONTAINER = $('.master-container');
 
         this.boxes = [];
         this.removedBoxes = [];

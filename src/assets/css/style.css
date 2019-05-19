@@ -46,8 +46,8 @@ body {
 }
 
 .master-container {
-    height: 400px;
-    width: 600px;
+    height: 600px;
+    width: 100%;
     overflow: hidden;
     position: relative;
     background-color: darkgrey;
@@ -79,8 +79,8 @@ body {
     position: absolute;
     top: -2px;
     left: -2px;
-    width: 100%;
-    height: 100%;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
     /*default border color*/
     border-width: 2px;
     border-style: dashed;

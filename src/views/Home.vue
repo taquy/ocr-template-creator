@@ -11,17 +11,22 @@
 
         </div>
 
-        <form id="form1" runat="server">
-            <input type="checkbox" v-model="dragging">Dragging
-            <button v-if="qtr"
-                    @click.prevent="qtr.api.exportTemplate">Export Template</button>
+        <form id="form1" runat="server"  v-if="qtr">
+            <md-switch v-model="dragging">Dragging</md-switch>
 
-
-            Upload image:
-            <input type="file" id="imageUpload"/>
-
-            Upload template:
-            <input type="file" id="templateUpload"/>
+            <md-button class="md-raised md-accent"
+                       @click.prevent="qtr.api.exportTemplate"
+            >
+                Export Template
+            </md-button>
+            <md-field>
+                <label>Upload image:</label>
+                <md-file accept="image/*" id="imageUpload"/>
+            </md-field>
+            <md-field>
+                <label>Upload template:</label>
+                <md-file id="templateUpload"/>
+            </md-field>
         </form>
 
     </div>
