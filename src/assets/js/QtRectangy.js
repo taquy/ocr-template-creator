@@ -28,6 +28,9 @@ export class QtRectangy {
 
         // options
         this.opt = new OptionMenu();
+
+        // apis for external call
+        this.api = new ApiHouse(this);
     }
 
     load() {
@@ -774,6 +777,18 @@ class BoxAudit {
         this.w = entity.width() / ctns.w;
         this.h = entity.height() / ctns.h;
     }
+
+    get() {
+        let ett = this.entity;
+        let ctn = ObjectModelContainer.getContainerSize();
+        return {
+            x: ett.position().left / ctn.w,
+            y: ett.position().top / ctn.h,
+            w: ett.width() / ctn.w,
+            h: ett.height() / ctn.h,
+            label: ett.find('.label').val(),
+        };
+    }
 }
 
 class FileUploaderHandling {
@@ -857,6 +872,31 @@ class ObjectModelContainer {
     }
 }
 
+class ApiHouse {
+    constructor(master) {
+        this.master = master;
+    }
+
+    exportTemplate(e, fn = null) {
+        // set file name
+        if (!fn) fn = 'config';
+
+        // collect template
+        let template = {
+            frame: {
+                w: CONTAINER.width(),
+                h: CONTAINER.height(),
+            },
+            fields: [],
+        };
+
+        let boxes = this.master.omc.boxes;
+        template.fields = boxes.map(item => item.get());
+        LibCode.downloadObjectAsJson(template, fn);
+    }
+
+}
+
 class LibCode {
     constructor() {
         // below code snippet is for pseudo element selector
@@ -891,6 +931,17 @@ class LibCode {
             };
 
         }(window.jQuery));
+    }
+
+    // for set content and download json template
+    static downloadObjectAsJson(exportObj, exportName){
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+        let downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href",     dataStr);
+        downloadAnchorNode.setAttribute("download", exportName + ".json");
+        document.body.appendChild(downloadAnchorNode); // required for firefox
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
     }
 
     // for get size of base64 image

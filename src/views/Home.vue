@@ -14,7 +14,8 @@
         <form id="form1" runat="server">
             <input type="checkbox" v-model="dragging">Dragging
             <input type="file" id="imageUpload" />
-            <img id="blah" src="#" alt="your image" />
+            <button v-if="qtr"
+                    @click.prevent="qtr.api.exportTemplate">Export Template</button>
         </form>
 
     </div>
@@ -38,7 +39,7 @@
                 this.qtr.load();
 
                 // this.qtr.opt.mode('DRAWING');
-                this.qtr.opt.mode('DRAGGING');
+                this.qtr.opt.mode('DRAWING');
             });
         },
 
