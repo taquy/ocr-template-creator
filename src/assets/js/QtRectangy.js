@@ -59,22 +59,106 @@ class KeyWatch {
 
         function keypress (e) {
             let kc = e.keyCode;
+            let boxes = vm.master.omc.boxes;
+            let rmBoxes = vm.master.omc.removedBoxes;
+
             if (e.ctrlKey) {
+
+                // CTRL + Z
                 if (kc === 90) {
-                    let box = vm.master.omc.boxes.pop();
-                    vm.master.omc.removedBoxes.push(box);
-                    vm.master.omc.redraw();
+
+                    let lastActivity = vm.master.omc.activities.pop();
+                    if (lastActivity) {
+                        if (lastActivity === 'REMOVE') {
+                            vm.poppingBox(rmBoxes, boxes);
+                        } else if (lastActivity === 'ADD') {
+                            vm.poppingBox(boxes, rmBoxes);
+                        }
+                        vm.master.omc.historyActivities.push(lastActivity);
+                    }
                 }
 
+                // CTRL + Y
                 if (kc === 89) {
-                    let box = vm.master.omc.removedBoxes.pop();
-                    if (!box) return;
-                    vm.master.omc.boxes.push(box);
-                    vm.master.omc.redraw();
+                    let lastAcitivity = vm.master.omc.historyActivities.pop();
+                    if (lastAcitivity) {
+                        if (lastAcitivity === 'ADD') {
+                            vm.poppingBox(rmBoxes, boxes);
+                        } else if (lastAcitivity === 'REMOVE') {
+                            vm.poppingBox(boxes, rmBoxes);
+                        }
+                        vm.master.omc.activities.push(lastAcitivity);
+                    }
                 }
+
+                // MOUSE UP
+
+                // MOUSE DOWN
+
+                // MOUSE LEFT
+
+                // MOUSE RIGHT
+
+                // CTRL + X
+
+                // CTRL + V
+            } else {
+                // DELETE
+                if (kc === 46) {
+                    let target = vm.master.mnu.cachedTarget;
+                    console.log(target);
+
+                    vm.master.omc.container.find('*').removeClass('active');
+
+                    // remove from storage and display
+                    let boxIndex = boxes.indexOf(target);
+                    boxes.splice(boxIndex, 1);
+                    rmBoxes.push(target);
+                    target.entity.remove();
+
+                    // clear cache and reset undo
+                    vm.master.mnu.cachedTarget = null;
+                    vm.master.omc.activities.push('REMOVE');
+                }
+
+                if (kc >= 37 && kc <= 40) {
+                    let target = vm.master.mnu.cachedTarget;
+                    if (!target || !target.entity) return;
+                    target = target.entity;
+
+                    let tgp = target.position();
+                    let x = tgp.left;
+                    let y = tgp.top;
+                    if (kc === 37) {
+                        // left arrow
+                        x--;
+                    } else if (kc === 38) {
+                        // up arrow
+                        y--;
+                    } else if (kc === 39) {
+                        // right arrow
+                        x++;
+                    } else if (kc === 40) {
+                        // down arrow
+                        y++;
+                    }
+                    target.css({
+                        left: x,
+                        top: y
+                    });
+                    vm.master.cube.attach(target);
+                }
+
             }
 
         }
+    }
+
+    poppingBox(pushOut, pushIn) {
+        let box = pushOut.pop();
+        if (!box) return;
+        box.entity = this.master.omc.redraw();
+        pushIn.push(box);
     }
 }
 
@@ -145,6 +229,7 @@ class Maneuver {
         this.master = master;
         this.mouse = new MouseRecorder();
         this.target = null;
+        this.cachedTarget = null;
         this.dist = [];
     }
 
@@ -167,6 +252,8 @@ class Maneuver {
             $(this).off('mousedown').mousedown(e => {
                 // e.stopPropagation();
                 vm.master.mnu.target = $(e.target);
+                let boxIndex = $('[box]').index($(e.target));
+                vm.master.mnu.cachedTarget = vm.master.omc.boxes[boxIndex];
 
                 // if boxes selected elevated index level of itself and so does its satellite cubes
                 vm.master.omc.container.find('*').removeClass('active');
@@ -193,7 +280,6 @@ class Maneuver {
     // load for first time
     load() {
         let vm = this;
-
 
         $('html').off('mousedown').mousedown(function (e) {
             vm.mouse.down = true;
@@ -367,13 +453,16 @@ class DrawingROIStrategy {
 
     after() {
         let tg = this.target;
-        if (tg && (tg.width() < 20 || tg.height() < 20)) {
+        if (!tg) return;
+        if (tg.width() < 20 || tg.height() < 20) {
             tg.remove();
         } else {
             let boxAudit = new BoxAudit(tg);
 
             // drawing new box disable recover previous boxes
             this.master.omc.resetUndo();
+
+            this.master.omc.activities.push('ADD');
 
             this.master.omc.boxes.push(boxAudit);
         }
@@ -704,6 +793,10 @@ class ObjectModelContainer {
         this.container = $('.container');
         this.boxes = [];
         this.removedBoxes = [];
+
+        // activities recorder
+        this.activities = [];
+        this.historyActivities = [];
     }
 
     resetUndo() {
