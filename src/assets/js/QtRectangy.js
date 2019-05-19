@@ -105,14 +105,6 @@ class KeyWatch {
                     }
                 }
 
-                // MOUSE UP
-
-                // MOUSE DOWN
-
-                // MOUSE LEFT
-
-                // MOUSE RIGHT
-
                 // CTRL + X
 
                 // CTRL + V
@@ -137,30 +129,62 @@ class KeyWatch {
 
                 if (kc >= 37 && kc <= 40) {
                     let target = vm.master.mnu.cachedTarget;
-                    if (!target || !target.entity) return;
-                    target = target.entity;
+                    if (!target || !target.entity) {
+                        // if no target selected, moving container instead
+                        let cw = CONTAINER.width();
+                        let ch = CONTAINER.height();
 
-                    let tgp = target.position();
-                    let x = tgp.left;
-                    let y = tgp.top;
-                    if (kc === 37) {
-                        // left arrow
-                        x--;
-                    } else if (kc === 38) {
+                        let sr = 0.005;
+                        let ss = {
+                            x: cw * sr,
+                            y: ch * sr
+                        };
+
+                        let ctnp = CONTAINER.position();
+                        let x = ctnp.left;
+                        let y = ctnp.top;
+
+                        if (kc === 37) x -= ss.x;
+
                         // up arrow
-                        y--;
-                    } else if (kc === 39) {
+                        if (kc === 38) y -= ss.y;
+
                         // right arrow
-                        x++;
-                    } else if (kc === 40) {
+                        if (kc === 39) x += ss.x;
+
                         // down arrow
-                        y++;
+                        if (kc === 40) y += ss.y;
+
+                        CONTAINER.css({
+                            left: x,
+                            top: y
+                        });
+
+                    } else {
+                        target = target.entity;
+
+                        let tgp = target.position();
+                        let x = tgp.left;
+                        let y = tgp.top;
+
+                        // left arrow
+                        if (kc === 37) x--;
+
+                        // up arrow
+                        if (kc === 38) y--;
+
+                        // right arrow
+                        if (kc === 39) x++;
+
+                        // down arrow
+                        if (kc === 40) y++;
+
+                        target.css({
+                            left: x,
+                            top: y
+                        });
+                        vm.master.cube.attach(target);
                     }
-                    target.css({
-                        left: x,
-                        top: y
-                    });
-                    vm.master.cube.attach(target);
                 }
             }
         }

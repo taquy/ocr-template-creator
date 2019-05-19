@@ -5,8 +5,8 @@
         <div class="master-container">
 
             <div class="container" canvas moveable>
-                <div class="image image2" box resizeable moveable>
-                </div>
+                <!--<div class="image image2" box resizeable moveable>-->
+                <!--</div>-->
             </div>
 
         </div>
