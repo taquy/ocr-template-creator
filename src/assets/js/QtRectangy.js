@@ -437,7 +437,7 @@ class DrawingROIStrategy {
     }
 
     getRatPos(e) {
-        let mso = MASTER_CONTAINER.position();
+        let mso = MASTER_CONTAINER.offset();
         return {
             x: e.pageX - mso.left,
             y: e.pageY - mso.top
