@@ -1,5 +1,6 @@
 let CONTAINER = null;
 let IMAGE_UPLOADER = null;
+let TEMPLATE_UPLOADER = null;
 
 export class QtRectangy {
     constructor() {
@@ -368,7 +369,7 @@ class DrawingROIStrategy {
         });
     }
 
-    draw(vm) {
+    draw(vm, labelVal = null) {
         // create new box
         let target = $('<div/>');
 
@@ -400,9 +401,8 @@ class DrawingROIStrategy {
             .keyup(resizeInput)
             .each(resizeInput);
 
-        // label.keyup(function (e) {
-        //     console.log(e);
-        // });
+        if (labelVal) label.val(labelVal);
+
         target.append(label);
 
         CONTAINER.append(target);
@@ -798,30 +798,58 @@ class FileUploaderHandling {
 
     load() {
         let vm = this;
-        IMAGE_UPLOADER.change(function () {
+        IMAGE_UPLOADER.off('change').change(function () {
             vm.readUrl(this);
         });
+
+        TEMPLATE_UPLOADER.off('change').change(function () {
+            vm.readTemplate(this)
+        })
+    }
+
+    readTemplate(input) {
+
+        if (!input.files || !input.files[0]) return;
+
+        let vm = this;
+        let reader = new FileReader();
+
+        function loadTemplate(e) {
+            let result = e.target.result;
+            result = JSON.parse(result);
+
+            vm.master.omc.boxes = result.fields;
+            vm.master.omc.redraw();
+        }
+
+        reader.onload = loadTemplate;
+
+
+        reader.readAsText(input.files[0]);
     }
 
     readUrl(input) {
-        if (input.files && input.files[0]) {
-            let reader = new FileReader();
+        let reader = new FileReader();
 
-            reader.onload = async function (e) {
-                let result = e.target.result;
+        async function loadImage(e) {
+            let result = e.target.result;
 
-                let imgSize = await LibCode.getImageDimensions(result);
+            let imgSize = await LibCode.getImageDimensions(result);
 
-                CONTAINER.css({
-                    width: imgSize.w,
-                    height: imgSize.h,
-                    backgroundImage: 'url(' + result + ')'
-                });
-            };
-
-            reader.readAsDataURL(input.files[0]);
+            CONTAINER.css({
+                width: imgSize.w,
+                height: imgSize.h,
+                backgroundImage: 'url(' + result + ')'
+            });
         }
+
+        if (!input.files || !input.files[0]) return;
+
+        reader.onload = loadImage;
+        reader.readAsDataURL(input.files[0]);
     }
+
+
 }
 
 class ObjectModelContainer {
@@ -830,6 +858,7 @@ class ObjectModelContainer {
 
         CONTAINER = $('.container');
         IMAGE_UPLOADER = $('#imageUpload');
+        TEMPLATE_UPLOADER = $('#templateUpload');
 
         this.boxes = [];
         this.removedBoxes = [];
@@ -861,7 +890,7 @@ class ObjectModelContainer {
 
             let ctns = ObjectModelContainer.getContainerSize();
 
-            let target = drawer.draw(vm);
+            let target = drawer.draw(vm, item.label);
             target.css({
                 width: item.w * ctns.w,
                 height: item.h * ctns.h,
@@ -934,10 +963,10 @@ class LibCode {
     }
 
     // for set content and download json template
-    static downloadObjectAsJson(exportObj, exportName){
+    static downloadObjectAsJson(exportObj, exportName) {
         let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
         let downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href",     dataStr);
+        downloadAnchorNode.setAttribute("href", dataStr);
         downloadAnchorNode.setAttribute("download", exportName + ".json");
         document.body.appendChild(downloadAnchorNode); // required for firefox
         downloadAnchorNode.click();

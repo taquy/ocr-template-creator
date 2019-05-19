@@ -13,9 +13,15 @@
 
         <form id="form1" runat="server">
             <input type="checkbox" v-model="dragging">Dragging
-            <input type="file" id="imageUpload" />
             <button v-if="qtr"
                     @click.prevent="qtr.api.exportTemplate">Export Template</button>
+
+
+            Upload image:
+            <input type="file" id="imageUpload"/>
+
+            Upload template:
+            <input type="file" id="templateUpload"/>
         </form>
 
     </div>
