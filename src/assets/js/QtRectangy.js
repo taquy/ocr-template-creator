@@ -266,6 +266,8 @@ class DrawingROIStrategy {
         this.target.css({
             width: 0,
             height: 0,
+            left: this.sp.x,
+            top: this.sp.y
         });
     }
 
@@ -369,6 +371,10 @@ class DrawingROIStrategy {
             tg.remove();
         } else {
             let boxAudit = new BoxAudit(tg);
+
+            // drawing new box disable recover previous boxes
+            this.master.omc.resetUndo();
+
             this.master.omc.boxes.push(boxAudit);
         }
     }
