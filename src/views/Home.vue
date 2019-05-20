@@ -11,7 +11,7 @@
 
         </div>
 
-        <form id="form1" runat="server"  v-if="qtr">
+        <form id="form1" runat="server">
             <md-switch v-model="dragging">Dragging</md-switch>
 
             <md-button class="md-raised md-accent"
@@ -50,7 +50,7 @@
                 this.qtr.load();
 
                 // this.qtr.opt.mode('DRAWING');
-                this.qtr.opt.mode('DRAWING');
+                this.qtr.opt.mode('DRAGGING');
             });
         },
 

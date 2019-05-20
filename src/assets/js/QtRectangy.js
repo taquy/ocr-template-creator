@@ -5,13 +5,14 @@ let MASTER_CONTAINER = null;
 
 export class QtRectangy {
     constructor() {
+        this.omc = new ObjectModelContainer(this);
+        this.omc.load();
 
         // load necessary lib code
         this.lib = new LibCode();
 
         this.mnu = new Maneuver(this);
 
-        this.omc = new ObjectModelContainer(this);
         this.ulh = new FileUploaderHandling(this);
 
         this.cube = new Cube(this);
@@ -40,6 +41,7 @@ export class QtRectangy {
         this.mnu.load();
         this.zoom.load();
         this.kw.load();
+
         this.ulh.load();
     }
 }
@@ -475,7 +477,6 @@ class DrawingROIStrategy {
             left: min.x - offset.x,
             top: min.y - offset.y
         });
-
     }
 
     after() {
@@ -874,17 +875,11 @@ class FileUploaderHandling {
         reader.readAsDataURL(input.files[0]);
     }
 
-
 }
 
 class ObjectModelContainer {
     constructor(master) {
         this.master = master;
-
-        CONTAINER = $('.container');
-        IMAGE_UPLOADER = $('#imageUpload');
-        TEMPLATE_UPLOADER = $('#templateUpload');
-        MASTER_CONTAINER = $('.master-container');
 
         this.boxes = [];
         this.removedBoxes = [];
@@ -892,6 +887,13 @@ class ObjectModelContainer {
         // activities recorder
         this.activities = [];
         this.historyActivities = [];
+    }
+
+    load() {
+        CONTAINER = $('.container');
+        IMAGE_UPLOADER = $('#imageUpload');
+        TEMPLATE_UPLOADER = $('#templateUpload');
+        MASTER_CONTAINER = $('.master-container');
     }
 
     resetUndo() {
