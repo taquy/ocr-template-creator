@@ -5,9 +5,6 @@ env:
     AWS_DEFAULT_OUTPUT: "json"
 
 phases:
-  install:
-    runtime-versions:
-      docker: 18
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
@@ -37,6 +34,6 @@ cache:
     - 'node_modules/**'
 artifacts:
   files:
-    - imagedefinitions.json
+    - '**/*'
   name: ocr-template-creator
   discard-paths: yes
