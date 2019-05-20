@@ -1,3 +1,7 @@
+const axios = require('axios');
+
+const SERVER = 'http://localhost:8081';
+
 let CONTAINER = null;
 let IMAGE_UPLOADER = null;
 let TEMPLATE_UPLOADER = null;
@@ -33,7 +37,9 @@ export class QtRectangy {
         this.opt = new OptionMenu();
 
         // apis for external call
-        this.api = new ApiHouse(this);
+        this.api = new ApiProvider(this);
+
+        this.apic = new ApiConsumer(this);
     }
 
     load() {
@@ -206,6 +212,11 @@ class Zoomer {
         this.master = master;
         // ratio of containers
         this.current = 1;
+
+        this.sd = {
+            w: 0, h: 0,
+            x: 0, y: 0
+        }
     }
 
     load() {
@@ -228,20 +239,31 @@ class Zoomer {
         let ctn = CONTAINER;
 
         // find new ratio for container
-        var r = this.current;
+        let r = this.current;
         if (isUp) {
             r += step;
         } else {
             r -= step;
         }
 
-        CONTAINER.css({
-            width: ctn.width() * r,
-            height: ctn.height() * r
-        });
+        let cp = ctn.offset();
+        let ow = ctn.width();
+        let oh = ctn.height();
+        let nw = ow * r;
+        let nh = oh * r;
+
+        // TODO onmouse wheel
+        // let dx = (e.pageX - cp.left) * (r - 1),
+        //     dy = (e.pageY - cp.top) * (r - 1);
+        //
+        // CONTAINER.css({
+        //     width: nw,
+        //     height: nh,
+        //     left: cp.left - dx,
+        //     top: cp.top - dy,
+        // });
 
         // resize box
-
         $('[box]').each(function (e) {
 
             let p = $(this).position();
@@ -825,7 +847,9 @@ class FileUploaderHandling {
     load() {
         let vm = this;
         IMAGE_UPLOADER.off('change').change(function () {
-            vm.readUrl(this);
+            vm.readUrl(this, files => {
+                vm.master.apic.detectTextBlock(files, vm)
+            });
         });
 
         TEMPLATE_UPLOADER.off('change').change(function () {
@@ -854,7 +878,7 @@ class FileUploaderHandling {
         reader.readAsText(input.files[0]);
     }
 
-    readUrl(input) {
+    readUrl(input, cb = null) {
         let reader = new FileReader();
 
         async function loadImage(e) {
@@ -862,11 +886,15 @@ class FileUploaderHandling {
 
             let imgSize = await LibCode.getImageDimensions(result);
 
+            // load uploaded image to container
             CONTAINER.css({
                 width: imgSize.w,
                 height: imgSize.h,
                 backgroundImage: 'url(' + result + ')'
             });
+
+            // run callback if any
+            if (cb) cb(input.files)
         }
 
         if (!input.files || !input.files[0]) return;
@@ -927,9 +955,75 @@ class ObjectModelContainer {
             });
         })
     }
+
+    reset() {
+        this.boxes = [];
+        this.removedBoxes = [];
+        this.activities = [];
+        this.historyActivities = [];
+        this.redraw();
+    }
+
+    parseAutoTextBlock(points) {
+        let w = CONTAINER.width();
+        let h = CONTAINER.height();
+
+        this.reset()
+
+        points.forEach(point => {
+            let p1 = {
+                x: point[0] * w,
+                y: point[1] * h,
+            };
+
+            let p2 = {
+                x: point[2] * w,
+                y: point[3] * h,
+            };
+
+            let bw = p2.x - p1.x;
+            let bh = p2.y - p1.y;
+
+            let target = this.master.strategy.d.draw(this);
+            target.css({
+                left: p1.x,
+                top: p1.y,
+                width: bw,
+                height: bh
+            });
+
+            this.boxes.push(new BoxAudit(target));
+        });
+    }
 }
 
-class ApiHouse {
+// consumer API from backend
+class ApiConsumer {
+    constructor(master) {
+        this.master = master;
+    }
+
+    // upload using form
+    detectTextBlock(files, vm) {
+        let data = new FormData();
+
+        let file = files.item(0);
+        data.append('file', file, file.name);
+
+        const config = {
+            headers: {'content-type': 'multipart/form-data'}
+        };
+
+        axios.post(SERVER + '/', data, config).then(result => {
+            vm.master.omc.parseAutoTextBlock(result.data);
+        }).catch(err => {
+            console.log(err)
+        })
+    }
+
+}
+
+class ApiProvider {
     constructor(master) {
         this.master = master;
     }

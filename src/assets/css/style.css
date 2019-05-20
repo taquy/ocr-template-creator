@@ -138,7 +138,8 @@ body {
 
 .label {
     min-width: 50px;
-    font-size: 12px;
+    font-weight: bold;
+    font-size: 15px;
     display: block;
     overflow: hidden;
     position: absolute;
@@ -153,6 +154,6 @@ body {
     left: -2px;
     outline: none;
     color: #fff;
-    font-variant: small-caps;
+    text-transform: uppercase;
     text-shadow: 0px 1px 1px #000;
 }
