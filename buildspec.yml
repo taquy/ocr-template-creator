@@ -1,0 +1,35 @@
+version: 0.2
+env:
+  variables:
+    AWS_DEFAULT_REGION: "ap-southeast-1"
+    AWS_DEFAULT_OUTPUT: "json"
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+
+      - REPOSITORY_URI_APP=657750027235.dkr.ecr.ap-southeast-1.amazonaws.com/ocr-template-creator
+      - COMMIT_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - echo $COMMIT_TAG
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo ">>>>>> BUILD IMAGES"
+      - docker build . -t $CODEBUILD_RESOLVED_SOURCE_VERSION:$COMMIT_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo ">>>>>> PUSH IMAGES"
+      - docker push $CODEBUILD_RESOLVED_SOURCE_VERSION:$COMMIT_TAG
+cache:
+  paths:
+    - 'node_modules/**'
+artifacts:
+  files:
+    - '**/*'
+  name: ocr-template-creator
+  discard-paths: yes
