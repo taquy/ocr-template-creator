@@ -20,11 +20,13 @@ phases:
       - echo Build started on `date`
       - echo ">>>>>> BUILD IMAGES"
       - docker build . -t $CODEBUILD_RESOLVED_SOURCE_VERSION:$COMMIT_TAG
+      - docker build . -t $CODEBUILD_RESOLVED_SOURCE_VERSION:latest
   post_build:
     commands:
       - echo Build completed on `date`
       - echo ">>>>>> PUSH IMAGES"
       - docker push $CODEBUILD_RESOLVED_SOURCE_VERSION:$COMMIT_TAG
+      - docker push $CODEBUILD_RESOLVED_SOURCE_VERSION:latest
 cache:
   paths:
     - 'node_modules/**'
