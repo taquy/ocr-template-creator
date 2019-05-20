@@ -16,25 +16,27 @@ phases:
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
 
       - REPOSITORY_URI_APP=657750027235.dkr.ecr.ap-southeast-1.amazonaws.com/ocr-template-creator
-      - COMMIT_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - echo $COMMIT_TAG
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
     commands:
       - echo Build started on `date`
       - echo ">>>>>> BUILD IMAGES"
-      - docker build . -t $CODEBUILD_RESOLVED_SOURCE_VERSION:$COMMIT_TAG
-      - docker build . -t $CODEBUILD_RESOLVED_SOURCE_VERSION:latest
+      - docker build -t $REPOSITORY_URI_APP:latest .
+      - docker tag $REPOSITORY_URI_APP:latest $REPOSITORY_URI_APP:$IMAGE_TAG .
   post_build:
     commands:
       - echo Build completed on `date`
       - echo ">>>>>> PUSH IMAGES"
-      - docker push $CODEBUILD_RESOLVED_SOURCE_VERSION:$COMMIT_TAG
-      - docker push $CODEBUILD_RESOLVED_SOURCE_VERSION:latest
+      - docker push $REPOSITORY_URI_APP:latest
+      - docker push $REPOSITORY_URI_APP:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '[{"name":"exporter-client","imageUri":"%s"}]' $REPOSITORY_URI_APP:$IMAGE_TAG > imagedefinitions.json
 cache:
   paths:
     - 'node_modules/**'
 artifacts:
   files:
-    - '**/*'
+    - imagedefinitions.json
   name: ocr-template-creator
   discard-paths: yes
