@@ -12,23 +12,29 @@ phases:
 
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
 
-      - REPOSITORY_URI_APP=657750027235.dkr.ecr.ap-southeast-1.amazonaws.com/ocr-template-creator
+      - REPOSITORY_URI_FE=657750027235.dkr.ecr.ap-southeast-1.amazonaws.com/ocr-template-creator
+      - REPOSITORY_URI_BE=657750027235.dkr.ecr.ap-southeast-1.amazonaws.com/ocr-template-creator-backend
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
     commands:
       - echo Build started on `date`
       - echo ">>>>>> BUILD IMAGES"
-      - docker build -t $REPOSITORY_URI_APP:latest .
-      - docker tag $REPOSITORY_URI_APP:latest $REPOSITORY_URI_APP:$IMAGE_TAG
+      - docker build -t $REPOSITORY_URI_FE:latest ./frontend
+      - docker build -t $REPOSITORY_URI_BE:latest ./backend
+      - docker tag $REPOSITORY_URI_FE:latest $REPOSITORY_URI_FE:$IMAGE_TAG
+      - docker tag $REPOSITORY_URI_BE:latest $REPOSITORY_URI_BE:$IMAGE_TAG
   post_build:
     commands:
       - echo Build completed on `date`
       - echo ">>>>>> PUSH IMAGES"
-      - docker push $REPOSITORY_URI_APP:latest
-      - docker push $REPOSITORY_URI_APP:$IMAGE_TAG
+      - docker push $REPOSITORY_URI_FE:latest
+      - docker push $REPOSITORY_URI_BE:latest
+      - docker push $REPOSITORY_URI_FE:$IMAGE_TAG
+      - docker push $REPOSITORY_URI_BE:$IMAGE_TAG
+      -
       - echo Writing image definitions file...
-      - printf '[{"name":"exporter-client","imageUri":"%s"}]' $REPOSITORY_URI_APP:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"frontend","imageUri":"%s"}, {"name":"backend","imageUri":"%s"}]' $REPOSITORY_URI_FE:$IMAGE_TAG $REPOSITORY_URI_BE:$IMAGE_TAG > imagedefinitions.json
 cache:
   paths:
     - 'node_modules/**'

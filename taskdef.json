@@ -1,0 +1,60 @@
+{
+  "executionRoleArn": "arn:aws:iam::657750027235:role/ocr-task-execution-role",
+  "containerDefinitions": [
+    {
+      "name": "frontend",
+      "image": "657750027235.dkr.ecr.ap-southeast-1.amazonaws.com/ocr-template-creator",
+      "essential": true,
+      "interactive": true,
+      "pseudoTerminal": true,
+      "portMappings": [
+        {
+          "hostPort": 80,
+          "protocol": "tcp",
+          "containerPort": 80
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "qtb",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ocr-template-creator-frontend"
+        }
+      },
+      "memory": 512,
+      "cpu": 256
+    },
+    {
+      "name": "backend",
+      "image": "657750027235.dkr.ecr.ap-southeast-1.amazonaws.com/ocr-template-creator-backend",
+      "interactive": true,
+      "pseudoTerminal": true,
+      "essential": true,
+      "portMappings": [
+        {
+          "hostPort": 5001,
+          "protocol": "tcp",
+          "containerPort": 5001
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "qtb",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ocr-template-creator-backend"
+        }
+      },
+      "memory": 1024,
+      "cpu": 512
+    }
+  ],
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "networkMode": "awsvpc",
+  "cpu": "1024",
+  "memory": "2048",
+  "family": "ocr-platform"
+}

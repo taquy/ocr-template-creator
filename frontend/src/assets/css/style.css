@@ -1,0 +1,159 @@
+body {
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.home,
+.app
+{
+    overflow: hidden;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.container {
+    /*border: 1px solid #eee;*/
+    height: 800px;
+    width: 800px;
+    background: aliceblue;
+    overflow: hidden;
+    position: relative;
+}
+
+.canvas {
+    background: #fff;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.paint {
+    background-color: magenta;
+    opacity: 0.8;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 300;
+}
+
+.master-container {
+    height: 600px;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    background-color: darkgrey;
+}
+
+.container {
+    transform-origin: top left;
+    background-image: url('http://softghar.com/Images/POS_Hardware/Bill_Sample/bill_size_79mm.jpg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-origin: content-box, border-box;
+}
+
+.container:hover {
+    cursor: grab;
+}
+
+.container:active {
+    cursor: grabbing;
+}
+
+.image {
+}
+
+.image:before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    /*default border color*/
+    border-width: 2px;
+    border-style: dashed;
+    border-color: inherit;
+}
+
+/*this is for sample*/
+.image2 {
+    width: 200px;
+    height: 70px;
+    /*background-color: coral;*/
+    left: 150px;
+    top: 70px;
+}
+
+
+[box] {
+    cursor: grab;
+    position: absolute;
+}
+
+[box].active {
+    z-index: 100;
+    box-shadow: 0px 0px 6px 1px #000;
+}
+
+[box]:active {
+    cursor: grabbing;
+}
+
+
+.cube {
+    position: absolute;
+    z-index: 1;
+    /*background: transparent;*/
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+    cursor: grab;
+    display: none;
+    background: blue;
+}
+.cube:hover {
+    border: 2px solid cyan;
+}
+
+.cube.active {
+    z-index: 101;
+    display: block;
+}
+
+.cube:active {
+    cursor: grabbing;
+}
+
+.label {
+    min-width: 50px;
+    font-weight: bold;
+    font-size: 15px;
+    display: block;
+    overflow: hidden;
+    position: absolute;
+    padding-left: 5px;
+    top: -17px;
+    font-family: Helvetica, sans-serif, Arial;
+    height: 15px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    border: none;
+    background: transparent;
+    left: -2px;
+    outline: none;
+    color: #fff;
+    text-transform: uppercase;
+    text-shadow: 0px 1px 1px #000;
+}
