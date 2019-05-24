@@ -1,4 +1,4 @@
-version: 0.2
+version: 0.2f
 env:
   variables:
     AWS_DEFAULT_REGION: "ap-southeast-1"

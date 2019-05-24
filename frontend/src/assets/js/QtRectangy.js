@@ -256,12 +256,12 @@ class Zoomer {
         // let dx = (e.pageX - cp.left) * (r - 1),
         //     dy = (e.pageY - cp.top) * (r - 1);
         //
-        // CONTAINER.css({
-        //     width: nw,
-        //     height: nh,
-        //     left: cp.left - dx,
-        //     top: cp.top - dy,
-        // });
+        CONTAINER.css({
+            width: nw,
+            height: nh,
+            // left: cp.left - dx,
+            // top: cp.top - dy,
+        });
 
         // resize box
         $('[box]').each(function (e) {
@@ -439,7 +439,7 @@ class DrawingROIStrategy {
         // create new label
         let label = $('<input class="label"/>');
         label.css({
-            backgroundColor: 'rgba(' + color + ', 0.5)'
+            backgroundColor: 'rgba(' + color + ', 0.6)'
         });
 
         function resizeInput() {
